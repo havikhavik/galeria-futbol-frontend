@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { routes } from "../app/router/routes";
+import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
@@ -96,14 +96,14 @@ export function DiscoveryPage() {
       return;
     }
     const url = new URL(window.location.href);
-    url.pathname = routes.search;
+    url.pathname = toAppPath(routes.search);
     url.searchParams.set("q", query);
     window.location.assign(url.toString());
   };
 
   const handleCategoryClick = (code: string) => {
     const url = new URL(window.location.href);
-    url.pathname = routes.search;
+    url.pathname = toAppPath(routes.search);
     url.search = "";
     url.searchParams.set("categoryCode", code);
     url.searchParams.set("teamType", teamType);

@@ -7,11 +7,8 @@ export function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-        <div className={styles.left}>
+        <div className={styles.info}>
           <BrandLogo compact />
-        </div>
-
-        <div className={styles.center}>
           <p className={styles.copyright}>
             © {currentYear} Galería Fútbol. Todos los derechos reservados.
           </p>

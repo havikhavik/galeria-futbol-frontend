@@ -1,4 +1,4 @@
-import { routes } from "../../../app/router/routes";
+import { routes, toAppPath } from "../../../app/router/routes";
 import { BrandLogo } from "../../../shared/components/BrandLogo/BrandLogo";
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar";
 
@@ -13,7 +13,7 @@ export function HomeHeader({ onSearchSubmit, searchValue }: HomeHeaderProps) {
   return (
     <header className={styles.header}>
       <a
-        href={routes.home}
+        href={toAppPath(routes.home)}
         className={styles.logoLink}
         aria-label="Ir al inicio"
       >

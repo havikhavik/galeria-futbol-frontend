@@ -6,7 +6,7 @@ import {
   type CSSProperties,
 } from "react";
 
-import { routes } from "../app/router/routes";
+import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
@@ -172,7 +172,7 @@ export function ResultsPage() {
         ? "Selecciones Nacionales"
         : "";
   const teamTypeDiscoveryHref = guidedTeamType
-    ? `${routes.discovery}?teamType=${guidedTeamType}`
+    ? `${toAppPath(routes.discovery)}?teamType=${guidedTeamType}`
     : "";
 
   const breadcrumb = query
@@ -217,7 +217,7 @@ export function ResultsPage() {
   const handleSearch = (q: string) => {
     if (!q) return;
     navigateTo((url) => {
-      url.pathname = routes.search;
+      url.pathname = toAppPath(routes.search);
       url.search = "";
       url.searchParams.set("q", q);
     });
@@ -290,7 +290,7 @@ export function ResultsPage() {
         {/* Breadcrumb */}
         <nav className={styles.breadcrumb}>
           <div className={styles.breadcrumbPath}>
-            <a href={routes.home} className={styles.breadcrumbLink}>
+            <a href={toAppPath(routes.home)} className={styles.breadcrumbLink}>
               Inicio
             </a>
             <span className={styles.breadcrumbSep}>›</span>
@@ -436,7 +436,7 @@ export function ResultsPage() {
                 {albums.map((album, i) => (
                   <a
                     key={album.id}
-                    href={`/albums/${album.id}`}
+                    href={toAppPath(`/albums/${album.id}`)}
                     className={styles.card}
                     style={{ "--card-index": i } as CSSProperties}
                   >

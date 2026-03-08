@@ -21,24 +21,21 @@
   gap: 0.9rem;
 }
 
-.left,
-.center,
+.info,
 .right {
-  flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;
 }
 
-.left {
+.info {
+  flex: 1;
   justify-content: flex-start;
-}
-
-.center {
-  justify-content: center;
+  gap: 0.7rem;
 }
 
 .right {
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
@@ -104,20 +101,28 @@
 
   .container {
     padding: 0.75rem 1rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
   }
 
-  .left,
-  .center,
-  .right {
-    width: 100%;
+  .info {
+    flex-direction: column;
     justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.25rem;
+    min-width: 0;
   }
 
   .copyright {
     white-space: normal;
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .right {
+    width: auto;
   }
 
   .socialButton {

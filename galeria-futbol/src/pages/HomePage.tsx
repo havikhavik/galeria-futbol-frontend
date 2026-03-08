@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 
+import { routes, toAppPath } from "../app/router/routes";
 import { HeroSection } from "../features/discovery/components/HeroSection";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { NavigationCards } from "../features/discovery/components/NavigationCards";
@@ -14,7 +15,7 @@ export function HomePage() {
       return;
     }
     const url = new URL(window.location.href);
-    url.pathname = "/search";
+    url.pathname = toAppPath(routes.search);
     url.searchParams.set("q", query);
     window.location.assign(url.toString());
   }, []);

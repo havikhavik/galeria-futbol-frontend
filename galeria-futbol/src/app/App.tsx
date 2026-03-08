@@ -1,11 +1,11 @@
 import { AppProviders } from "./providers/AppProviders";
-import { routes } from "./router/routes";
+import { getAppPathname, routes } from "./router/routes";
 import { DiscoveryPage } from "../pages/DiscoveryPage";
 import { HomePage } from "../pages/HomePage";
 import { ResultsPage } from "../pages/ResultsPage";
 
 function App() {
-  const { pathname } = window.location;
+  const pathname = getAppPathname(window.location.pathname);
 
   let page;
   if (pathname === routes.discovery) {
