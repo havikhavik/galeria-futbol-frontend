@@ -1,0 +1,49 @@
+.hero {
+  width: 100%;
+  max-width: none;
+  min-height: 42vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+}
+
+.title {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(3.6rem, 6.2vw, 6.8rem);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #f8fbff;
+}
+
+.subtitle {
+  margin: 0.9rem 0 0;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  color: rgba(236, 247, 255, 0.9);
+}
+
+.meta {
+  margin: 0.8rem 0 0;
+  font-size: clamp(1rem, 1.8vw, 1.4rem);
+  color: rgba(208, 232, 250, 0.8);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    max-width: 100%;
+    min-height: 40vh;
+  }
+
+  .title {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .title {
+    white-space: nowrap;
+  }
+}

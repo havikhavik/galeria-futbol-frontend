@@ -1,0 +1,27 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logoLink {
+  text-decoration: none;
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid rgba(198, 230, 255, 0.95);
+  outline-offset: 4px;
+  border-radius: 0.6rem;
+}
+
+@media (max-width: 820px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .logoLink {
+    align-self: flex-start;
+  }
+}

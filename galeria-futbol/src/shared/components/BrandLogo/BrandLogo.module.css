@@ -1,0 +1,55 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #f3f7ff;
+}
+
+.mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 25% 20%,
+    #6ce5ff,
+    #0a7696 48%,
+    #033042 100%
+  );
+  box-shadow: 0 0 0.9rem rgba(70, 199, 255, 0.5);
+  font-size: 1.05rem;
+}
+
+.markCore {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba(234, 249, 255, 0.95);
+  box-shadow: 0 0 0 0.15rem rgba(8, 56, 77, 0.4);
+}
+
+.text {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.brand[data-compact="true"] .text {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .text {
+    font-size: 1.15rem;
+  }
+
+  .mark {
+    width: 1.6rem;
+    height: 1.6rem;
+    font-size: 0.85rem;
+  }
+}
