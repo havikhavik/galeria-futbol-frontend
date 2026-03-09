@@ -56,10 +56,10 @@ type FilterKey =
 const PAGE_SIZE = 12;
 
 const TAG_LABELS: Record<FilterKey, string> = {
-  kids: "Kids",
-  women: "Women",
+  kids: "Niños",
+  women: "Mujeres",
   goalkeeper: "Arquero",
-  training: "Training",
+  training: "Entrenamiento",
   classic: "Clásica",
   retro: "Retro",
 };
@@ -162,6 +162,7 @@ export function ResultsPage() {
   const [imgErrors, setImgErrors] = useState<Record<number, true>>({});
   const [pending, setPending] = useState(urlFilters);
   const [sortOpen, setSortOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const hasFilters = FILTER_KEYS.some((k) => urlFilters[k]);
@@ -172,7 +173,7 @@ export function ResultsPage() {
         ? "Selecciones Nacionales"
         : "";
   const teamTypeDiscoveryHref = guidedTeamType
-    ? `${toAppPath(routes.discovery)}?teamType=${guidedTeamType}`
+    ? `${toAppPath(routes.categories)}?teamType=${guidedTeamType}`
     : "";
 
   const breadcrumb = query
@@ -215,11 +216,12 @@ export function ResultsPage() {
   /* ── Handlers ── */
 
   const handleSearch = (q: string) => {
-    if (!q) return;
     navigateTo((url) => {
       url.pathname = toAppPath(routes.search);
       url.search = "";
-      url.searchParams.set("q", q);
+      if (q) {
+        url.searchParams.set("q", q);
+      }
     });
   };
 
@@ -334,9 +336,6 @@ export function ResultsPage() {
         {error && <p className={styles.error}>{error}</p>}
 
         <div className={styles.toolbar}>
-          <span className={styles.filteredCount}>
-            {!isLoading && resultsLabel}
-          </span>
           <div className={styles.sortWrap} ref={sortDropdownRef}>
             <span className={styles.sortLabel}>Ordenar por:</span>
             <button
@@ -390,11 +389,31 @@ export function ResultsPage() {
               </ul>
             )}
           </div>
+
+          <button
+            type="button"
+            className={styles.filterToggle}
+            aria-expanded={filtersOpen}
+            onClick={() => setFiltersOpen((o) => !o)}
+          >
+            <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+              <path
+                d="M3 5h14M3 10h14M3 15h14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            Filtros
+          </button>
         </div>
 
         <div className={styles.layout}>
           {/* ── Sidebar ── */}
-          <aside className={styles.sidebar}>
+          <aside
+            className={`${styles.sidebar} ${filtersOpen ? styles.sidebarOpen : ""}`}
+          >
             <h3 className={styles.sidebarHeading}>Filtros</h3>
 
             <fieldset className={styles.filterGroup}>

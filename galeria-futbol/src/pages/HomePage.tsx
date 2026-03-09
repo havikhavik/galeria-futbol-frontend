@@ -11,12 +11,12 @@ import styles from "./HomePage.module.css";
 
 export function HomePage() {
   const handleSearchSubmit = useCallback((query: string) => {
-    if (!query) {
-      return;
-    }
     const url = new URL(window.location.href);
     url.pathname = toAppPath(routes.search);
-    url.searchParams.set("q", query);
+    url.search = "";
+    if (query) {
+      url.searchParams.set("q", query);
+    }
     window.location.assign(url.toString());
   }, []);
 

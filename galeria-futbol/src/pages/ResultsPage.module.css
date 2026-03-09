@@ -125,13 +125,9 @@
   flex: 0 0 240px;
   position: sticky;
   top: 80px;
-  padding: 1.2rem;
+  padding: 20px;
   border-radius: 14px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.06) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(6px);
 }
@@ -163,9 +159,14 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.75);
+  transition: color 0.15s ease;
+}
+
+.checkRow:hover {
+  color: #fff;
 }
 
 .checkbox {
@@ -185,6 +186,7 @@
 
 .applyBtn {
   width: 100%;
+  margin-top: 16px;
   padding: 0.55rem;
   border: 0;
   border-radius: 10px;
@@ -298,6 +300,30 @@
   background: rgba(96, 165, 250, 0.2);
 }
 
+/* ── Filter toggle (mobile only) ── */
+
+.filterToggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.filterToggle:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
 /* ── Card grid ── */
 
 .grid {
@@ -315,12 +341,8 @@
   color: inherit;
   border-radius: 14px;
   overflow: hidden;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.07) 0%,
-    rgba(255, 255, 255, 0.03) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-top: 2px solid transparent;
   backdrop-filter: blur(4px);
   transition:
@@ -341,10 +363,10 @@
 
 .cardImageContainer {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 200px;
   overflow: hidden;
   border-radius: 10px 10px 0 0;
-  background: rgba(255, 255, 255, 0.95);
+  background: #f8f8f8;
 }
 
 .cardImage {
@@ -353,6 +375,8 @@
   height: 100%;
   object-fit: cover;
   object-position: center top;
+  padding: 0;
+  background: transparent;
   transition: transform 0.3s ease;
 }
 
@@ -376,14 +400,18 @@
 }
 
 .cardBody {
-  padding: 0 12px 12px;
+  padding: 12px 14px 14px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .cardTitle {
-  margin: 0 0 0.4rem;
+  margin: 0 0 6px;
   font-size: 0.88rem;
-  font-weight: 650;
-  line-height: 1.3;
+  font-weight: 600;
+  line-height: 1.35;
   color: rgba(255, 255, 255, 0.92);
   overflow: hidden;
   display: -webkit-box;
@@ -427,6 +455,11 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.55);
+}
+
+.card:active {
+  transform: scale(0.97);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* ── Pagination ── */
@@ -504,10 +537,19 @@
   }
 
   .sidebar {
+    display: none;
     width: 100%;
     flex-basis: auto;
     position: static;
     order: -1;
+  }
+
+  .sidebarOpen {
+    display: block;
+  }
+
+  .filterToggle {
+    display: inline-flex;
   }
 
   .container {
@@ -520,8 +562,9 @@
   }
 
   .toolbar {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
   }
 
@@ -529,6 +572,21 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cardImageContainer {
+    height: 160px;
+  }
+
+  .cardTitle {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 2;
   }
 }
 

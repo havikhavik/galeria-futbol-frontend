@@ -5,7 +5,7 @@ import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
 
-import styles from "./DiscoveryPage.module.css";
+import styles from "./CategoriesPage.module.css";
 
 type TeamType = "CLUB" | "NATIONAL";
 
@@ -56,7 +56,7 @@ function getTeamTypeFromQuery(): TeamType {
   return teamType === "CLUB" ? "CLUB" : "NATIONAL";
 }
 
-export function DiscoveryPage() {
+export function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,12 +92,12 @@ export function DiscoveryPage() {
   }, [teamType]);
 
   const handleSearchSubmit = (query: string) => {
-    if (!query) {
-      return;
-    }
     const url = new URL(window.location.href);
     url.pathname = toAppPath(routes.search);
-    url.searchParams.set("q", query);
+    url.search = "";
+    if (query) {
+      url.searchParams.set("q", query);
+    }
     window.location.assign(url.toString());
   };
 

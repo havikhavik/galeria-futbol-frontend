@@ -12,7 +12,7 @@ type TeamType = "CLUB" | "NATIONAL";
 export function NavigationCards() {
   const handleCategoryClick = useCallback((teamType: TeamType) => {
     const url = new URL(window.location.href);
-    url.pathname = toAppPath(routes.discovery);
+    url.pathname = toAppPath(routes.categories);
     url.searchParams.set("teamType", teamType);
     window.location.assign(url.toString());
   }, []);

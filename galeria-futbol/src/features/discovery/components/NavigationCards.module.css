@@ -11,5 +11,12 @@
   .grid {
     grid-template-columns: 1fr;
     justify-items: stretch;
+    padding-inline: 0.45rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    padding-inline: 0.6rem;
   }
 }

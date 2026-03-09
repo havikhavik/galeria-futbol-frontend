@@ -1,6 +1,6 @@
 export const routes = {
   home: '/',
-  discovery: '/discovery',
+  categories: '/categories',
   search: '/search',
   albumDetail: '/albums/:id',
   admin: '/admin',
