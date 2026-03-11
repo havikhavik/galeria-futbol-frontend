@@ -490,6 +490,17 @@
   .detail {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    min-width: 0;
+  }
+
+  .gallery {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .mainImageWrap {
+    width: 100%;
+    max-width: 100%;
   }
 
   .container {
@@ -515,6 +526,7 @@
     gap: 6px;
     margin-top: 10px;
     margin-bottom: 4px;
+    max-width: 100%;
   }
 
   .thumb {

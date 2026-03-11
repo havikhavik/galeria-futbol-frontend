@@ -462,57 +462,16 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* ── Pagination ── */
+/* ── Infinite scroll trigger ── */
 
-.pagination {
+.loadMoreTrigger {
   display: flex;
-  align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 2rem;
-  padding-bottom: 1rem;
-}
-
-.pageBtn {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-
-.pageBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.pageBtn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.active {
-  background: rgba(96, 165, 250, 0.25);
-  border-color: rgba(96, 165, 250, 0.5);
-  color: #93c5fd;
-  font-weight: 700;
-}
-
-.ellipsis {
-  padding: 0 0.3rem;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.pageInfo {
-  margin-left: 0.8rem;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.4);
+  align-items: center;
+  min-height: 44px;
+  margin-top: 1.2rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.84rem;
 }
 
 /* ── Animation ── */

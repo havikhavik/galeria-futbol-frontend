@@ -119,22 +119,6 @@ function buildApiPath(p: URLSearchParams, page: number): string {
   return `albums?${out.toString()}`;
 }
 
-function pageNumbers(current: number, total: number): (number | "dots")[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i);
-
-  const pages: (number | "dots")[] = [0];
-  if (current > 2) pages.push("dots");
-
-  const lo = Math.max(1, current - 1);
-  const hi = Math.min(total - 2, current + 1);
-  for (let i = lo; i <= hi; i++) pages.push(i);
-
-  if (current < total - 3) pages.push("dots");
-  pages.push(total - 1);
-
-  return pages;
-}
-
 function navigateTo(mutate: (url: URL) => void) {
   const url = new URL(window.location.href);
   mutate(url);
@@ -150,20 +134,24 @@ export function ResultsPage() {
   const teamType = params.get("teamType") || "";
   const guidedTeamType =
     teamType === "CLUB" || teamType === "NATIONAL" ? teamType : null;
-  const currentPage = parseInt(params.get("page") || "0", 10);
+  const initialPage = parseInt(params.get("page") || "0", 10);
   const sortBy = params.get("sort") || "";
   const urlFilters = useMemo(() => readFilters(params), [params]);
 
   const [albums, setAlbums] = useState<AlbumResponse[]>([]);
+  const [page, setPage] = useState(initialPage);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imgErrors, setImgErrors] = useState<Record<number, true>>({});
   const [pending, setPending] = useState(urlFilters);
   const [sortOpen, setSortOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const hasFilters = FILTER_KEYS.some((k) => urlFilters[k]);
   const teamTypeLabel =
@@ -188,22 +176,29 @@ export function ResultsPage() {
     let cancelled = false;
 
     const load = async () => {
-      setIsLoading(true);
+      if (page === initialPage) setIsLoading(true);
+      else setIsLoadingMore(true);
       setError(null);
       try {
         const data = await httpClient.getJson<Page<AlbumResponse>>(
-          buildApiPath(params, currentPage),
+          buildApiPath(params, page),
         );
         if (cancelled) return;
-        setAlbums(data.content);
+        setAlbums((prev) =>
+          page === initialPage ? data.content : [...prev, ...data.content],
+        );
         setTotalElements(data.totalElements);
         setTotalPages(data.totalPages);
-        setImgErrors({});
+        setHasMore(page < data.totalPages - 1);
+        if (page === initialPage) setImgErrors({});
       } catch {
         if (!cancelled)
           setError("No pudimos cargar los resultados. Intenta nuevamente.");
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+          setIsLoadingMore(false);
+        }
       }
     };
 
@@ -211,7 +206,23 @@ export function ResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [params, currentPage]);
+  }, [params, page, initialPage]);
+
+  useEffect(() => {
+    if (!loadMoreRef.current || isLoading || isLoadingMore || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: "240px" },
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, isLoadingMore]);
 
   /* ── Handlers ── */
 
@@ -241,9 +252,6 @@ export function ResultsPage() {
       if (categoryCode) url.searchParams.set("categoryCode", categoryCode);
       if (teamType) url.searchParams.set("teamType", teamType);
     });
-
-  const changePage = (p: number) =>
-    navigateTo((url) => url.searchParams.set("page", String(p)));
 
   const changeSort = (s: string) =>
     navigateTo((url) => {
@@ -523,50 +531,10 @@ export function ResultsPage() {
               </section>
             )}
 
-            {/* Pagination */}
-            {totalPages > 1 && !isLoading && (
-              <nav className={styles.pagination} aria-label="Paginación">
-                <button
-                  className={styles.pageBtn}
-                  disabled={currentPage === 0}
-                  onClick={() => changePage(currentPage - 1)}
-                  type="button"
-                >
-                  ‹ Anterior
-                </button>
-
-                {pageNumbers(currentPage, totalPages).map((p, i) =>
-                  p === "dots" ? (
-                    <span key={`d${i}`} className={styles.ellipsis}>
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={p}
-                      className={`${styles.pageBtn} ${
-                        p === currentPage ? styles.active : ""
-                      }`}
-                      onClick={() => changePage(p)}
-                      type="button"
-                    >
-                      {p + 1}
-                    </button>
-                  ),
-                )}
-
-                <button
-                  className={styles.pageBtn}
-                  disabled={currentPage >= totalPages - 1}
-                  onClick={() => changePage(currentPage + 1)}
-                  type="button"
-                >
-                  Siguiente ›
-                </button>
-
-                <span className={styles.pageInfo}>
-                  Página {currentPage + 1} de {totalPages}
-                </span>
-              </nav>
+            {!isLoading && totalPages > 1 && hasMore && (
+              <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
+                {isLoadingMore ? "Cargando más resultados…" : ""}
+              </div>
             )}
           </div>
         </div>
