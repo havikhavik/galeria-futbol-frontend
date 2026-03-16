@@ -18,6 +18,7 @@ function isValidEmail(value: string): boolean {
 export function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,16 +98,59 @@ export function AdminLoginPage() {
             <label className={styles.label} htmlFor="admin-password">
               Contraseña
             </label>
-            <input
-              id="admin-password"
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              maxLength={128}
-              required
-            />
+            <div className={styles.passwordField}>
+              <input
+                id="admin-password"
+                type={showPassword ? "text" : "password"}
+                className={`${styles.input} ${styles.passwordInput}`}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                maxLength={128}
+                required
+              />
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+                aria-pressed={showPassword}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className={styles.passwordToggleIcon}
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2.2 12s3.6-6 9.8-6 9.8 6 9.8 6-3.6 6-9.8 6-9.8-6-9.8-6Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="3.1"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  {showPassword ? null : (
+                    <path
+                      d="M4 20 20 4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
 
           {error && <p className={styles.error}>{error}</p>}
