@@ -1,0 +1,108 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.2rem;
+  margin-bottom: 1.75rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  min-height: 170px;
+  padding: 1.7rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(147, 197, 253, 0.44);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.28);
+}
+
+.cardLabel {
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.cardValue {
+  margin: 0;
+  font-size: clamp(2.6rem, 4vw, 3.4rem);
+  font-weight: 800;
+  color: #e2eaf6;
+  line-height: 1.02;
+}
+
+.cardValueUnavailable {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 2.4rem;
+}
+
+.ctaSection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.ctaButton {
+  min-height: 72px;
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(37, 99, 235, 0.18);
+  color: #dbeafe;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.95rem 1.1rem;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.ctaButton:hover {
+  background: rgba(37, 99, 235, 0.28);
+  border-color: rgba(96, 165, 250, 0.65);
+  transform: translateY(-1px);
+}
+
+.loading,
+.error {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 1rem 0;
+}
+
+.error {
+  color: #f87171;
+}
+
+@media (max-width: 840px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ctaSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
