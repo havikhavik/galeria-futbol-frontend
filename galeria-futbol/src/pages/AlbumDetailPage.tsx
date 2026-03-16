@@ -4,6 +4,7 @@ import { getAppPathname, routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
+import { navigateWithCurrentUrl } from "../shared/utils/navigation";
 
 import styles from "./AlbumDetailPage.module.css";
 
@@ -118,13 +119,13 @@ export function AlbumDetailPage() {
   }, [lightbox, images.length]);
 
   const handleSearch = (q: string) => {
-    const url = new URL(window.location.href);
-    url.pathname = toAppPath(routes.search);
-    url.search = "";
-    if (q) {
-      url.searchParams.set("q", q);
-    }
-    window.location.assign(url.toString());
+    navigateWithCurrentUrl((url) => {
+      url.pathname = toAppPath(routes.search);
+      url.search = "";
+      if (q) {
+        url.searchParams.set("q", q);
+      }
+    });
   };
 
   const tags = album

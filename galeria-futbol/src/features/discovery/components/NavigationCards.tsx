@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 
 import { routes, toAppPath } from "../../../app/router/routes";
+import { navigateWithCurrentUrl } from "../../../shared/utils/navigation";
 import championsIcon from "../assets/champions-icono.png";
 import nationalIcon from "../assets/icono-pelota.png";
 
@@ -11,10 +12,10 @@ type TeamType = "CLUB" | "NATIONAL";
 
 export function NavigationCards() {
   const handleCategoryClick = useCallback((teamType: TeamType) => {
-    const url = new URL(window.location.href);
-    url.pathname = toAppPath(routes.categories);
-    url.searchParams.set("teamType", teamType);
-    window.location.assign(url.toString());
+    navigateWithCurrentUrl((url) => {
+      url.pathname = toAppPath(routes.categories);
+      url.searchParams.set("teamType", teamType);
+    });
   }, []);
 
   return (

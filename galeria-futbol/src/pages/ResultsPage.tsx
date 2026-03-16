@@ -10,6 +10,7 @@ import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
+import { navigateWithCurrentUrl } from "../shared/utils/navigation";
 
 import styles from "./ResultsPage.module.css";
 
@@ -119,12 +120,6 @@ function buildApiPath(p: URLSearchParams, page: number): string {
   return `albums?${out.toString()}`;
 }
 
-function navigateTo(mutate: (url: URL) => void) {
-  const url = new URL(window.location.href);
-  mutate(url);
-  window.location.assign(url.toString());
-}
-
 /* ── Component ───────────────────────────────────────── */
 
 export function ResultsPage() {
@@ -227,7 +222,7 @@ export function ResultsPage() {
   /* ── Handlers ── */
 
   const handleSearch = (q: string) => {
-    navigateTo((url) => {
+    navigateWithCurrentUrl((url) => {
       url.pathname = toAppPath(routes.search);
       url.search = "";
       if (q) {
@@ -237,7 +232,7 @@ export function ResultsPage() {
   };
 
   const applyFilters = () =>
-    navigateTo((url) => {
+    navigateWithCurrentUrl((url) => {
       for (const k of FILTER_KEYS) {
         if (pending[k]) url.searchParams.set(k, "true");
         else url.searchParams.delete(k);
@@ -246,7 +241,7 @@ export function ResultsPage() {
     });
 
   const clearFilters = () =>
-    navigateTo((url) => {
+    navigateWithCurrentUrl((url) => {
       url.search = "";
       if (query) url.searchParams.set("q", query);
       if (categoryCode) url.searchParams.set("categoryCode", categoryCode);
@@ -254,7 +249,7 @@ export function ResultsPage() {
     });
 
   const changeSort = (s: string) =>
-    navigateTo((url) => {
+    navigateWithCurrentUrl((url) => {
       if (s) url.searchParams.set("sort", s);
       else url.searchParams.delete("sort");
       url.searchParams.set("page", "0");

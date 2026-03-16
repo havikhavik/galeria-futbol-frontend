@@ -4,6 +4,7 @@ import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
+import { navigateWithCurrentUrl } from "../shared/utils/navigation";
 
 import styles from "./CategoriesPage.module.css";
 
@@ -92,22 +93,22 @@ export function CategoriesPage() {
   }, [teamType]);
 
   const handleSearchSubmit = (query: string) => {
-    const url = new URL(window.location.href);
-    url.pathname = toAppPath(routes.search);
-    url.search = "";
-    if (query) {
-      url.searchParams.set("q", query);
-    }
-    window.location.assign(url.toString());
+    navigateWithCurrentUrl((url) => {
+      url.pathname = toAppPath(routes.search);
+      url.search = "";
+      if (query) {
+        url.searchParams.set("q", query);
+      }
+    });
   };
 
   const handleCategoryClick = (code: string) => {
-    const url = new URL(window.location.href);
-    url.pathname = toAppPath(routes.search);
-    url.search = "";
-    url.searchParams.set("categoryCode", code);
-    url.searchParams.set("teamType", teamType);
-    window.location.assign(url.toString());
+    navigateWithCurrentUrl((url) => {
+      url.pathname = toAppPath(routes.search);
+      url.search = "";
+      url.searchParams.set("categoryCode", code);
+      url.searchParams.set("teamType", teamType);
+    });
   };
 
   return (
