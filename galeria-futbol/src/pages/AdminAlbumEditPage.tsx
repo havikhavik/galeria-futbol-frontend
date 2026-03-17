@@ -202,7 +202,6 @@ export function AdminAlbumEditPage() {
     number | null
   >(null);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
-  const [isUpdatingCover, setIsUpdatingCover] = useState<number | null>(null);
   const [nextTempImageId, setNextTempImageId] = useState(-1);
   const [hasPendingImageChanges, setHasPendingImageChanges] = useState(false);
 
@@ -587,49 +586,21 @@ export function AdminAlbumEditPage() {
     }
   };
 
-  const setCoverImage = async (imageId: number) => {
-    if (!albumId || !form) return;
-    setIsUpdatingCover(imageId);
+  const setCoverImage = (imageId: number) => {
+    if (!form) return;
     setImagesError(null);
 
-    try {
-      const selectedImageUrl = images.find((img) => img.id === imageId)?.url;
-      const payload = images.map((img, index) => ({
-        id: img.id > 0 ? img.id : undefined,
-        url: img.url,
-        position: img.position ?? index,
+    const selected = images.find((img) => img.id === imageId);
+    if (!selected?.url) return;
+
+    setImages((prev) =>
+      prev.map((img) => ({
+        ...img,
         primary: img.id === imageId,
-      }));
-
-      const response = await fetchWithAuth(
-        httpClient.buildUrl(`admin/albums/${albumId}/images`),
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`COVER_FAILED:${response.status}`);
-      }
-
-      const nextImages = (await response.json()) as ImageApi[];
-      setImages(nextImages);
-      const selected =
-        nextImages.find(
-          (img) => selectedImageUrl && img.url === selectedImageUrl,
-        ) ?? nextImages.find((img) => img.id === imageId);
-      if (selected?.url) {
-        setForm({ ...form, thumbnail: selected.url });
-      }
-    } catch {
-      setImagesError("No se pudo actualizar la portada del álbum.");
-    } finally {
-      setIsUpdatingCover(null);
-    }
+      })),
+    );
+    setForm({ ...form, thumbnail: selected.url });
+    setHasPendingImageChanges(true);
   };
 
   const handleSave = async () => {
@@ -940,7 +911,7 @@ export function AdminAlbumEditPage() {
                     type="button"
                     className={styles.imageButton}
                     onClick={() => setCoverImage(image.id)}
-                    disabled={isUpdatingCover !== null || image.primary}
+                    disabled={image.primary}
                     title={
                       image.primary ? "Portada actual" : "Usar como portada"
                     }
@@ -960,11 +931,8 @@ export function AdminAlbumEditPage() {
                         type="button"
                         className={styles.linkBtn}
                         onClick={() => setCoverImage(image.id)}
-                        disabled={isUpdatingCover !== null}
                       >
-                        {isUpdatingCover === image.id
-                          ? "Actualizando..."
-                          : "Marcar portada"}
+                        Marcar portada
                       </button>
                     )}
 
