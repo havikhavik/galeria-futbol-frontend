@@ -3,7 +3,7 @@
   min-height: 100vh;
   color: #edf6ff;
   isolation: isolate;
-  overflow: clip;
+  overflow: visible;
   background-color: #071122;
 }
 
@@ -43,6 +43,22 @@
   z-index: -2;
 }
 
+.page::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 80px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 83, 44, 0) 0%,
+    rgba(8, 19, 37, 0.9) 100%
+  );
+  z-index: 0;
+}
+
 .page::after {
   content: "";
   position: absolute;
@@ -64,7 +80,7 @@
   width: min(96rem, 100% - 2.4rem);
   margin-inline: auto;
   padding-block: clamp(1rem, 2.2vw, 2rem) clamp(2.2rem, 5.5vw, 4.2rem);
-  padding-bottom: calc(clamp(2.2rem, 5.5vw, 4.2rem) + 52px);
+  padding-bottom: calc(clamp(2.2rem, 5.5vw, 4.2rem) + 14px);
   position: relative;
   z-index: 1;
 }

@@ -1,51 +1,55 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AdminLayout } from "../features/admin/components/AdminLayout";
+import {
+  deleteAdminCollection,
+  fetchAdminCollections,
+  type AdminCollectionCard,
+} from "../features/admin/collections/api";
 import { routes } from "../app/router/routes";
-import { httpClient } from "../shared/api/httpClient";
+import { useApiData } from "../shared/hooks/useApiData";
 import { navigateTo } from "../shared/utils/navigation";
 import styles from "./AdminCollectionsPage.module.css";
 
-interface Collection {
-  id: number;
-  name: string;
-  description?: string;
-  itemCount: number;
+function formatDateRange(startDate: string, endDate: string): string {
+  const format = (value: string): string => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
+    return new Intl.DateTimeFormat("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(date);
+  };
+
+  return `${format(startDate)} → ${format(endDate)}`;
 }
 
 export function AdminCollectionsPage() {
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const loadCollections = useCallback(() => fetchAdminCollections(), []);
+  const {
+    data: collections,
+    setData: setCollections,
+    isLoading: loading,
+    error,
+  } = useApiData<AdminCollectionCard[]>(loadCollections, {
+    initialData: [],
+  });
   const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .getJson<Collection[]>("admin/collections")
-      .then((data) => {
-        setCollections(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError(true);
-        setLoading(false);
-      });
-  }, []);
 
   const handleDelete = async (id: number) => {
     try {
-      await fetch(`${httpClient.buildUrl(`admin/collections/${id}`)}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("adminToken") ?? ""}`,
-        },
-        credentials: "omit",
-      });
+      await deleteAdminCollection(id);
       setCollections((prev) => prev.filter((c) => c.id !== id));
     } catch {
-      // keep UI stable
+      return;
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const openCollectionEditor = (id: number) => {
+    if (deletingId === id) return;
+    navigateTo(routes.adminCollectionEdit.replace(":id", String(id)));
   };
 
   return (
@@ -82,12 +86,52 @@ export function AdminCollectionsPage() {
       {!loading && !error && collections.length > 0 && (
         <div className={styles.grid}>
           {collections.map((col) => (
-            <div key={col.id} className={styles.card}>
-              <p className={styles.cardName}>{col.name}</p>
-              {col.description && (
-                <p className={styles.cardMeta}>{col.description}</p>
-              )}
-              <p className={styles.cardMeta}>{col.itemCount} elementos</p>
+            <div
+              key={col.id}
+              className={styles.card}
+              role="button"
+              tabIndex={0}
+              onClick={() => openCollectionEditor(col.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openCollectionEditor(col.id);
+                }
+              }}
+              aria-label={`Editar colección ${col.name}`}
+            >
+              <div className={styles.cardBannerWrap}>
+                {col.bannerImage ? (
+                  <img
+                    src={col.bannerImage}
+                    alt={`Banner de ${col.name}`}
+                    className={styles.cardBanner}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className={styles.cardBannerPlaceholder}>Sin banner</div>
+                )}
+                <span
+                  className={`${styles.statusBadge} ${col.active ? styles.statusActive : styles.statusInactive}`}
+                >
+                  {col.active ? "Activa" : "Inactiva"}
+                </span>
+              </div>
+
+              <div className={styles.cardBody}>
+                <p className={styles.cardName}>{col.name}</p>
+                <p className={styles.cardMetaStrong}>
+                  {col.itemCount} {col.itemCount === 1 ? "álbum" : "álbumes"}
+                  <span className={styles.metaDot}>·</span>
+                  Prioridad {col.priority}
+                </p>
+                <p className={styles.cardMeta}>
+                  {formatDateRange(col.startDate, col.endDate)}
+                </p>
+                {col.description && (
+                  <p className={styles.cardDescription}>{col.description}</p>
+                )}
+              </div>
 
               {deletingId === col.id ? (
                 <div className={styles.deleteConfirm}>
@@ -95,14 +139,20 @@ export function AdminCollectionsPage() {
                   <button
                     type="button"
                     className={styles.btnDanger}
-                    onClick={() => handleDelete(col.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void handleDelete(col.id);
+                    }}
                   >
                     Sí
                   </button>
                   <button
                     type="button"
                     className={styles.btnCancel}
-                    onClick={() => setDeletingId(null)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeletingId(null);
+                    }}
                   >
                     No
                   </button>
@@ -111,34 +161,12 @@ export function AdminCollectionsPage() {
                 <div className={styles.cardActions}>
                   <button
                     type="button"
-                    className={styles.btnIcon}
-                    title="Editar"
-                    onClick={() =>
-                      navigateTo(
-                        routes.adminCollectionEdit.replace(
-                          ":id",
-                          String(col.id),
-                        ),
-                      )
-                    }
-                  >
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
                     className={`${styles.btnIcon} ${styles.btnIconDanger}`}
                     title="Eliminar"
-                    onClick={() => setDeletingId(col.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeletingId(col.id);
+                    }}
                   >
                     <svg
                       width="13"

@@ -1,4 +1,5 @@
 import { httpClient } from "../../../shared/api/httpClient";
+import type { HttpClientError } from "../../../shared/types/common";
 import type {
   AdminAlbumApi,
   AlbumRow,
@@ -53,6 +54,7 @@ export async function fetchAdminAlbumsPageWithFallback(
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(PAGE_SIZE));
+  params.set("sort", "updatedAt,desc");
 
   const trimmedSearch = search.trim();
   if (trimmedSearch) {
@@ -73,7 +75,12 @@ export async function fetchAdminAlbumsPageWithFallback(
     return await httpClient.getJson<PageResponse<AdminAlbumApi>>(
       `admin/albums?${params.toString()}`,
     );
-  } catch {
+  } catch (error) {
+    const httpError = error as HttpClientError;
+    if (httpError?.status !== 404) {
+      throw error;
+    }
+
     const publicPage = await httpClient.getJson<PageResponse<PublicAlbumApi>>(
       `albums?${params.toString()}`,
     );

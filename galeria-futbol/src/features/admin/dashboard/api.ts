@@ -26,8 +26,20 @@ async function loadMetricsFrom(path: string): Promise<AdminDashboardMetrics> {
     totalAlbums,
     totalClubs,
     totalSelections,
+    totalCollections: 0,
     totalImages: null,
   };
+}
+
+async function getTotalCollectionsReal(): Promise<number | null> {
+  try {
+    const collections = await httpClient.getJson<Array<{ id: number }>>(
+      "admin/featured-collections",
+    );
+    return collections?.length ?? 0;
+  } catch {
+    return null;
+  }
 }
 
 async function getTotalImagesReal(): Promise<number | null> {
@@ -51,6 +63,7 @@ export async function loadAdminDashboardMetrics(): Promise<AdminDashboardMetrics
       totalAlbums: overview.totalAlbums ?? 0,
       totalSelections: overview.totalSelections ?? 0,
       totalClubs: overview.totalClubs ?? 0,
+      totalCollections: overview.totalCollections ?? 0,
       totalImages: overview.totalImages ?? 0,
     };
   } catch {
@@ -61,9 +74,11 @@ export async function loadAdminDashboardMetrics(): Promise<AdminDashboardMetrics
       metrics = await loadMetricsFrom("albums");
     }
 
+    const totalCollections = await getTotalCollectionsReal();
     const totalImages = await getTotalImagesReal();
     return {
       ...metrics,
+      totalCollections: totalCollections ?? metrics.totalCollections,
       totalImages: totalImages ?? metrics.totalImages,
     };
   }

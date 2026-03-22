@@ -2,13 +2,12 @@ import { useCallback } from "react";
 
 import { routes, toAppPath } from "../../../app/router/routes";
 import { navigateWithCurrentUrl } from "../../../shared/utils/navigation";
+import type { TeamType } from "../../../shared/types/common";
 import championsIcon from "../assets/champions-icono.png";
 import nationalIcon from "../assets/icono-pelota.png";
 
 import { CategoryCard } from "./CategoryCard";
 import styles from "./NavigationCards.module.css";
-
-type TeamType = "CLUB" | "NATIONAL";
 
 export function NavigationCards() {
   const handleCategoryClick = useCallback((teamType: TeamType) => {

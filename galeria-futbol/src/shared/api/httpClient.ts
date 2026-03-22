@@ -1,5 +1,6 @@
 import { clearAdminSession, getAdminToken } from "../auth/adminSession"
 import { getAppPathname, toAppPath } from "../utils/appPath"
+import type { ApiErrorPayload, HttpClientError } from "../types/common"
 
 const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
 
@@ -7,17 +8,10 @@ if (!rawApiBaseUrl) {
   throw new Error('Missing VITE_API_BASE_URL. Set it in your .env file.')
 }
 
-const apiBaseUrl = rawApiBaseUrl.trim().replace(/\/+$/, '').replace(/\.$/, '')
+const normalizedRemoteApiBaseUrl = rawApiBaseUrl.trim().replace(/\/+$/, '').replace(/\.$/, '')
+const apiBaseUrl = import.meta.env.DEV ? '/api' : normalizedRemoteApiBaseUrl
 
-type ApiErrorPayload = {
-  message?: string
-  errors?: string[]
-}
-
-export type HttpClientError = Error & {
-  status?: number
-  detail?: string
-}
+export type { HttpClientError } from "../types/common"
 
 function buildHeaders(extra?: HeadersInit): Headers {
   const headers = new Headers(extra)
@@ -40,7 +34,7 @@ function redirectToLogin(): void {
 }
 
 async function requestJson<T>(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: object,
 ): Promise<T> {
@@ -74,6 +68,10 @@ async function requestJson<T>(
     throw error
   }
 
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return (await response.json()) as T
 }
 
@@ -83,4 +81,9 @@ export const httpClient = {
   getJson: <T>(path: string): Promise<T> => requestJson<T>('GET', path),
   postJson: <TResponse, TBody extends object>(path: string, body: TBody): Promise<TResponse> =>
     requestJson<TResponse>('POST', path, body),
+  putJson: <TResponse, TBody extends object>(path: string, body: TBody): Promise<TResponse> =>
+    requestJson<TResponse>('PUT', path, body),
+  patchJson: <TResponse, TBody extends object>(path: string, body: TBody): Promise<TResponse> =>
+    requestJson<TResponse>('PATCH', path, body),
+  deleteJson: <T>(path: string): Promise<T> => requestJson<T>('DELETE', path),
 }

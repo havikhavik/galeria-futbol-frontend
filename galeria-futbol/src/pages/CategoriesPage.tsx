@@ -4,58 +4,14 @@ import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
+import type { CategoryResponse } from "../shared/types/categories";
+import type { TeamType } from "../shared/types/common";
+import { getLeagueInitials, toTitleCase } from "../shared/utils/formatters";
 import { navigateWithCurrentUrl } from "../shared/utils/navigation";
+import { getTeamTypeFromQuery } from "../shared/utils/parsers";
+import { isDarkLogo } from "../shared/utils/theming";
 
 import styles from "./CategoriesPage.module.css";
-
-type TeamType = "CLUB" | "NATIONAL";
-
-type CategoryResponse = {
-  id: number;
-  code: string;
-  name: string;
-  teamType: TeamType;
-  thumbnail?: string | null;
-};
-
-function toTitleCase(value: string): string {
-  return value
-    .toLowerCase()
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((word) => word[0].toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function getLeagueInitials(value: string): string {
-  const tokens = value
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .slice(0, 2);
-
-  if (tokens.length === 0) {
-    return "LG";
-  }
-
-  return tokens.map((token) => token[0]?.toUpperCase() ?? "").join("");
-}
-
-function isDarkLogo(code: string): boolean {
-  const darkLogoCodes = new Set([
-    "LIGUE_1",
-    "PREMIER_LEAGUE",
-    "SERIE_A",
-    "LA_LIGA",
-    "BUNDESLIGA",
-  ]);
-
-  return darkLogoCodes.has(code);
-}
-
-function getTeamTypeFromQuery(): TeamType {
-  const teamType = new URLSearchParams(window.location.search).get("teamType");
-  return teamType === "CLUB" ? "CLUB" : "NATIONAL";
-}
 
 export function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
@@ -63,7 +19,7 @@ export function CategoriesPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, true>>({});
 
-  const teamType = useMemo(getTeamTypeFromQuery, []);
+  const teamType = useMemo<TeamType>(() => getTeamTypeFromQuery(), []);
   const pageTitle =
     teamType === "NATIONAL" ? "Selecciones Nacionales" : "Clubes";
   const leaguesCountLabel =

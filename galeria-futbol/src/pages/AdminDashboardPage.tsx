@@ -8,6 +8,7 @@ import styles from "./AdminDashboardPage.module.css";
 
 const CARD_DEFS = [
   ["Total Álbumes", "totalAlbums"],
+  ["Colecciones", "totalCollections"],
   ["Selecciones", "totalSelections"],
   ["Clubes", "totalClubs"],
   ["Imágenes", "totalImages"],
@@ -16,6 +17,7 @@ const CARD_DEFS = [
 export function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<AdminDashboardMetrics>({
     totalAlbums: 0,
+    totalCollections: 0,
     totalSelections: 0,
     totalClubs: 0,
     totalImages: null,

@@ -20,6 +20,7 @@ function safeSetSessionItem(key: string, value: string): void {
   try {
     window.sessionStorage.setItem(key, value);
   } catch {
+    return;
   }
 }
 
@@ -28,6 +29,7 @@ function safeRemoveSessionItem(key: string): void {
   try {
     window.sessionStorage.removeItem(key);
   } catch {
+    return;
   }
 }
 

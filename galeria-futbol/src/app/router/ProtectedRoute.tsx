@@ -37,12 +37,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       setIsChecking(false);
       return;
     }
+
+    setIsVerified(true);
+    setIsChecking(false);
+
     let cancelled = false;
 
     const verify = async () => {
       try {
         await httpClient.getJson<{ authenticated: boolean }>("auth/me");
-        if (!cancelled) setIsVerified(true);
       } catch (error) {
         if (cancelled) return;
 
@@ -55,12 +58,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           redirectToLogin();
           return;
         }
-
-        // Compatibility fallback: if backend does not expose /auth/me yet (e.g. 404),
-        // allow route access based on local JWT presence to avoid blank admin screen.
-        setIsVerified(true);
-      } finally {
-        if (!cancelled) setIsChecking(false);
       }
     };
 

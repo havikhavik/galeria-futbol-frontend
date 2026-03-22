@@ -19,6 +19,12 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow: visible;
+}
+
+#root {
+  min-height: 100vh;
+  overflow: visible;
 }
 
 a {

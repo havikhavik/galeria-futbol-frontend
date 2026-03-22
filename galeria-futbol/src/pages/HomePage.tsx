@@ -4,6 +4,7 @@ import { routes, toAppPath } from "../app/router/routes";
 import { HeroSection } from "../features/discovery/components/HeroSection";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { NavigationCards } from "../features/discovery/components/NavigationCards";
+import { FeaturedCollectionsCarousel } from "../features/discovery/components/FeaturedCollectionsCarousel";
 import heroBackground from "../features/discovery/assets/hero.jpg";
 import { Footer } from "../shared/components/Footer/Footer";
 import { navigateWithCurrentUrl } from "../shared/utils/navigation";
@@ -22,22 +23,27 @@ export function HomePage() {
   }, []);
 
   return (
-    <main className={styles.page}>
-      <img
-        className={styles.backgroundImage}
-        src={heroBackground}
-        alt=""
-        aria-hidden="true"
-      />
-      <div className={styles.backgroundOverlay} aria-hidden="true" />
-      <div className={styles.container}>
-        <HomeHeader onSearchSubmit={handleSearchSubmit} />
-        <div className={styles.content}>
-          <HeroSection />
-          <NavigationCards />
+    <>
+      <main className={styles.page}>
+        <img
+          className={styles.backgroundImage}
+          src={heroBackground}
+          alt=""
+          aria-hidden="true"
+        />
+        <div className={styles.backgroundOverlay} aria-hidden="true" />
+        <div className={styles.container}>
+          <HomeHeader onSearchSubmit={handleSearchSubmit} />
+          <div className={styles.content}>
+            <HeroSection />
+            <NavigationCards />
+          </div>
         </div>
-      </div>
+      </main>
+
+      <FeaturedCollectionsCarousel />
+
       <Footer />
-    </main>
+    </>
   );
 }

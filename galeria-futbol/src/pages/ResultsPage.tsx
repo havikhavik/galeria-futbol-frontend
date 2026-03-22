@@ -9,121 +9,28 @@ import {
 import { routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
+import { FILTER_KEYS, TAG_LABELS } from "../shared/constants/albumFilters";
 import { Footer } from "../shared/components/Footer/Footer";
+import type { AlbumResponse, AlbumTagKey } from "../shared/types/albums";
+import type { PageResponse } from "../shared/types/common";
+import type { FeaturedCollectionWithAlbumsApi } from "../shared/types/collections";
+import { albumTags } from "../shared/utils/albumHelpers";
+import { formatCode } from "../shared/utils/formatters";
 import { navigateWithCurrentUrl } from "../shared/utils/navigation";
+import {
+  buildAlbumsApiPath,
+  readTagFilters,
+} from "../shared/utils/queryHelpers";
+import { readSearchParams } from "../shared/utils/parsers";
 
 import styles from "./ResultsPage.module.css";
-
-/* ── Types ───────────────────────────────────────────── */
-
-type AlbumResponse = {
-  id: number;
-  title: string;
-  seasonLabel: string | null;
-  seasonStart: number;
-  teamType: "CLUB" | "NATIONAL";
-  categoryCode: string;
-  categoryName: string;
-  thumbnail: string | null;
-  description: string | null;
-  kids: boolean;
-  women: boolean;
-  goalkeeper: boolean;
-  training: boolean;
-  classic: boolean;
-  retro: boolean;
-};
-
-type Page<T> = {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number;
-  size: number;
-  first: boolean;
-  last: boolean;
-};
-
-type FilterKey =
-  | "kids"
-  | "women"
-  | "goalkeeper"
-  | "training"
-  | "classic"
-  | "retro";
-
-/* ── Constants ───────────────────────────────────────── */
-
-const PAGE_SIZE = 12;
-
-const TAG_LABELS: Record<FilterKey, string> = {
-  kids: "Niños",
-  women: "Mujeres",
-  goalkeeper: "Arquero",
-  training: "Entrenamiento",
-  classic: "Clásica",
-  retro: "Retro",
-};
-
-const FILTER_KEYS = Object.keys(TAG_LABELS) as FilterKey[];
-
-/* ── Helpers ─────────────────────────────────────────── */
-
-function readParams() {
-  return new URLSearchParams(window.location.search);
-}
-
-function readFilters(p: URLSearchParams): Record<FilterKey, boolean> {
-  return Object.fromEntries(
-    FILTER_KEYS.map((k) => [k, p.get(k) === "true"]),
-  ) as Record<FilterKey, boolean>;
-}
-
-function formatCode(code: string): string {
-  return code
-    .toLowerCase()
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-function albumTags(a: AlbumResponse): string[] {
-  return FILTER_KEYS.filter((k) => a[k]).map((k) => TAG_LABELS[k]);
-}
-
-function buildApiPath(p: URLSearchParams, page: number): string {
-  const out = new URLSearchParams();
-
-  const q = p.get("q");
-  if (q) out.set("q", q);
-
-  const cc = p.get("categoryCode");
-  if (cc) out.set("categoryCode", cc);
-
-  const tt = p.get("teamType");
-  if (tt) out.set("teamType", tt);
-
-  for (const k of FILTER_KEYS) {
-    if (p.get(k) === "true") out.set(k, "true");
-  }
-
-  const ss = p.get("seasonStart");
-  if (ss) out.set("seasonStart", ss);
-
-  out.set("page", String(page));
-  out.set("size", String(PAGE_SIZE));
-
-  const sort = p.get("sort");
-  if (sort) out.set("sort", sort);
-
-  return `albums?${out.toString()}`;
-}
 
 /* ── Component ───────────────────────────────────────── */
 
 export function ResultsPage() {
-  const params = useMemo(readParams, []);
+  const params = useMemo(readSearchParams, []);
+  const featuredSlug = params.get("featured") || "";
+  const isFeaturedMode = Boolean(featuredSlug);
   const query = params.get("q") || "";
   const categoryCode = params.get("categoryCode") || "";
   const teamType = params.get("teamType") || "";
@@ -131,7 +38,10 @@ export function ResultsPage() {
     teamType === "CLUB" || teamType === "NATIONAL" ? teamType : null;
   const initialPage = parseInt(params.get("page") || "0", 10);
   const sortBy = params.get("sort") || "";
-  const urlFilters = useMemo(() => readFilters(params), [params]);
+  const urlFilters = useMemo(
+    () => readTagFilters<AlbumTagKey>(params, FILTER_KEYS),
+    [params],
+  );
 
   const [albums, setAlbums] = useState<AlbumResponse[]>([]);
   const [page, setPage] = useState(initialPage);
@@ -141,6 +51,7 @@ export function ResultsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [featuredTitle, setFeaturedTitle] = useState("");
   const [imgErrors, setImgErrors] = useState<Record<number, true>>({});
   const [pending, setPending] = useState(urlFilters);
   const [sortOpen, setSortOpen] = useState(false);
@@ -159,11 +70,15 @@ export function ResultsPage() {
     ? `${toAppPath(routes.categories)}?teamType=${guidedTeamType}`
     : "";
 
-  const breadcrumb = query
-    ? `Búsqueda: "${query}"`
-    : categoryCode
-      ? formatCode(categoryCode)
-      : "Todos los álbumes";
+  const breadcrumb = isFeaturedMode
+    ? featuredTitle
+      ? `Colección: "${featuredTitle}"`
+      : "Colección destacada"
+    : query
+      ? `Búsqueda: "${query}"`
+      : categoryCode
+        ? formatCode(categoryCode)
+        : "Todos los álbumes";
 
   /* ── Fetch albums ── */
 
@@ -171,20 +86,46 @@ export function ResultsPage() {
     let cancelled = false;
 
     const load = async () => {
+      if (isFeaturedMode && page !== initialPage) {
+        setHasMore(false);
+        return;
+      }
+
       if (page === initialPage) setIsLoading(true);
       else setIsLoadingMore(true);
       setError(null);
       try {
-        const data = await httpClient.getJson<Page<AlbumResponse>>(
-          buildApiPath(params, page),
+        if (isFeaturedMode) {
+          const details =
+            await httpClient.getJson<FeaturedCollectionWithAlbumsApi>(
+              `featured/${featuredSlug}`,
+            );
+
+          if (cancelled) return;
+
+          const collectionAlbums = (details.albums ?? []) as AlbumResponse[];
+          setAlbums(collectionAlbums);
+          setFeaturedTitle(details.title ?? "");
+          setTotalElements(collectionAlbums.length);
+          setTotalPages(1);
+          setHasMore(false);
+          if (page === initialPage) setImgErrors({});
+          return;
+        }
+
+        const data = await httpClient.getJson<PageResponse<AlbumResponse>>(
+          buildAlbumsApiPath(params, page),
         );
         if (cancelled) return;
+        setFeaturedTitle("");
+        const nextTotalElements = data.totalElements ?? 0;
+        const nextTotalPages = data.totalPages ?? 0;
         setAlbums((prev) =>
           page === initialPage ? data.content : [...prev, ...data.content],
         );
-        setTotalElements(data.totalElements);
-        setTotalPages(data.totalPages);
-        setHasMore(page < data.totalPages - 1);
+        setTotalElements(nextTotalElements);
+        setTotalPages(nextTotalPages);
+        setHasMore(page < nextTotalPages - 1);
         if (page === initialPage) setImgErrors({});
       } catch {
         if (!cancelled)
@@ -201,7 +142,7 @@ export function ResultsPage() {
     return () => {
       cancelled = true;
     };
-  }, [params, page, initialPage]);
+  }, [featuredSlug, initialPage, isFeaturedMode, page, params]);
 
   useEffect(() => {
     if (!loadMoreRef.current || isLoading || isLoadingMore || !hasMore) return;
@@ -233,6 +174,9 @@ export function ResultsPage() {
 
   const applyFilters = () =>
     navigateWithCurrentUrl((url) => {
+      if (isFeaturedMode) {
+        url.searchParams.delete("featured");
+      }
       for (const k of FILTER_KEYS) {
         if (pending[k]) url.searchParams.set(k, "true");
         else url.searchParams.delete(k);
@@ -243,6 +187,7 @@ export function ResultsPage() {
   const clearFilters = () =>
     navigateWithCurrentUrl((url) => {
       url.search = "";
+      if (isFeaturedMode) url.searchParams.set("featured", featuredSlug);
       if (query) url.searchParams.set("q", query);
       if (categoryCode) url.searchParams.set("categoryCode", categoryCode);
       if (teamType) url.searchParams.set("teamType", teamType);
@@ -250,12 +195,15 @@ export function ResultsPage() {
 
   const changeSort = (s: string) =>
     navigateWithCurrentUrl((url) => {
+      if (isFeaturedMode) {
+        url.searchParams.delete("featured");
+      }
       if (s) url.searchParams.set("sort", s);
       else url.searchParams.delete("sort");
       url.searchParams.set("page", "0");
     });
 
-  const toggle = (k: FilterKey) =>
+  const toggle = (k: AlbumTagKey) =>
     setPending((prev) => ({ ...prev, [k]: !prev[k] }));
 
   const resultsLabel =

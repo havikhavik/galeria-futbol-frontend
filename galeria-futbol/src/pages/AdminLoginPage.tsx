@@ -3,17 +3,11 @@ import { type FormEvent, useState } from "react";
 import { routes } from "../app/router/routes";
 import { httpClient } from "../shared/api/httpClient";
 import { setAdminSession } from "../shared/auth/adminSession";
+import type { LoginResponse } from "../shared/types/auth";
 import { navigateTo } from "../shared/utils/navigation";
+import { isValidEmail } from "../shared/utils/validators";
 
 import styles from "./AdminLoginPage.module.css";
-
-type LoginResponse = {
-  token: string;
-};
-
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState("");

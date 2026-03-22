@@ -4,64 +4,12 @@ import { getAppPathname, routes, toAppPath } from "../app/router/routes";
 import { HomeHeader } from "../features/discovery/components/HomeHeader";
 import { httpClient } from "../shared/api/httpClient";
 import { Footer } from "../shared/components/Footer/Footer";
+import type { AlbumResponse, ImageResponse } from "../shared/types/albums";
+import { albumTags } from "../shared/utils/albumHelpers";
+import { formatCode } from "../shared/utils/formatters";
 import { navigateWithCurrentUrl } from "../shared/utils/navigation";
 
 import styles from "./AlbumDetailPage.module.css";
-
-/* ── Types ── */
-
-type AlbumResponse = {
-  id: number;
-  title: string;
-  seasonLabel: string | null;
-  seasonStart: number;
-  teamType: "CLUB" | "NATIONAL";
-  categoryCode: string;
-  categoryName: string;
-  thumbnail: string | null;
-  description: string | null;
-  kids: boolean;
-  women: boolean;
-  goalkeeper: boolean;
-  training: boolean;
-  classic: boolean;
-  retro: boolean;
-};
-
-type ImageResponse = {
-  id: number;
-  url: string;
-  position: number;
-  primary: boolean;
-};
-
-type FilterKey =
-  | "kids"
-  | "women"
-  | "goalkeeper"
-  | "training"
-  | "classic"
-  | "retro";
-
-const TAG_LABELS: Record<FilterKey, string> = {
-  kids: "Niños",
-  women: "Mujeres",
-  goalkeeper: "Arquero",
-  training: "Entrenamiento",
-  classic: "Clásica",
-  retro: "Retro",
-};
-
-const FILTER_KEYS = Object.keys(TAG_LABELS) as FilterKey[];
-
-function formatCode(code: string): string {
-  return code
-    .toLowerCase()
-    .split(/[_\s-]+/)
-    .filter(Boolean)
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(" ");
-}
 
 /* ── Component ── */
 
@@ -128,9 +76,7 @@ export function AlbumDetailPage() {
     });
   };
 
-  const tags = album
-    ? FILTER_KEYS.filter((k) => album[k]).map((k) => TAG_LABELS[k])
-    : [];
+  const tags = album ? albumTags(album) : [];
   const teamTypeLabel =
     album?.teamType === "CLUB"
       ? "Clubes"
