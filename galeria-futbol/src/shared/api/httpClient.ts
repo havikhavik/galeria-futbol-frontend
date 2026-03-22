@@ -15,9 +15,11 @@ export type { HttpClientError } from "../types/common"
 
 function buildHeaders(extra?: HeadersInit): Headers {
   const headers = new Headers(extra)
-  const token = getAdminToken()
-  if (token) headers.set('Authorization', `Bearer ${token}`)
   return headers
+}
+
+function shouldAttachAuth(normalizedPath: string): boolean {
+  return normalizedPath.startsWith('admin/') || normalizedPath === 'auth/me'
 }
 
 function redirectToLogin(): void {
@@ -39,10 +41,18 @@ async function requestJson<T>(
   body?: object,
 ): Promise<T> {
   const normalizedPath = path.replace(/^\/+/, '')
+  const headers = buildHeaders(body ? { 'Content-Type': 'application/json' } : undefined)
+  if (shouldAttachAuth(normalizedPath)) {
+    const token = getAdminToken()
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+  }
+
   const response = await fetch(`${apiBaseUrl}/${path.replace(/^\/+/, '')}`, {
     method,
     credentials: 'omit',
-    headers: buildHeaders(body ? { 'Content-Type': 'application/json' } : undefined),
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   })
 
