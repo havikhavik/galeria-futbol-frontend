@@ -3,7 +3,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { routes, toAppPath } from "../../../app/router/routes";
 import { httpClient } from "../../../shared/api/httpClient";
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar";
-import { FILTER_KEYS, TAG_LABELS } from "../../../shared/constants/albumFilters";
+import { FILTER_KEYS } from "../../../shared/constants/albumFilters";
 import {
   updateUrlSearchParams,
   useUrlSearchParams,
@@ -12,43 +12,23 @@ import type { AlbumResponse, AlbumTagKey } from "../../../shared/types/albums";
 import type { PageResponse } from "../../../shared/types/common";
 import type { FeaturedCollectionWithAlbumsApi } from "../../../shared/types/collections";
 import { navigateWithCurrentUrl, submitSearch } from "../../../shared/utils/navigation";
-import {
-  RELEVANCE_SORT,
-  buildAlbumsApiPath,
-  readTagFilters,
-} from "../../../shared/utils/queryHelpers";
+import { buildAlbumsApiPath, readTagFilters } from "../../../shared/utils/queryHelpers";
+import { type GalleryMode, defaultSortFor } from "../catalogSort";
 import { categoryDisplayName } from "../catalogTaxonomy";
 import { type CatalogTaxonomy, useCatalogTaxonomy } from "../useCatalogTaxonomy";
 
 import { AlbumTile } from "./AlbumTile";
+import { CatalogTools } from "./CatalogTools";
 import { type CatalogTab, CategoryBar } from "./CategoryBar";
 import styles from "./CatalogGallery.module.css";
-
-type GalleryMode = "home" | "search";
 
 type CatalogGalleryProps = {
   /** "home" lists the latest uploads first; "search" keeps relevance. */
   mode: GalleryMode;
 };
 
-/** Latest uploads first: what "Recién llegadas" shows on the home page. */
-const NEWEST_UPLOADS_SORT = "createdAt,desc";
-
 /** URL value of the «Colecciones» tab when no collection is chosen. */
 const COLLECTIONS_TAB = "colecciones";
-
-// On the home page "Más recientes" means the latest uploads; in searches it
-// keeps sorting by season, as before.
-const sortOptions = (mode: GalleryMode) => [
-  { value: RELEVANCE_SORT, label: "Relevancia" },
-  { value: "title,asc", label: "Título A-Z" },
-  { value: "title,desc", label: "Título Z-A" },
-  {
-    value: mode === "home" ? NEWEST_UPLOADS_SORT : "seasonStart,desc",
-    label: "Más recientes",
-  },
-  { value: "seasonStart,asc", label: "Más antiguos" },
-];
 
 const countLabel = (n: number) => (n === 1 ? "1 camiseta" : `${n} camisetas`);
 
@@ -151,6 +131,7 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
         onSelectTab={selectTab}
         onSelectItem={selectItem}
         mobileSearchPinned={mode === "search"}
+        tools={<CatalogTools mode={mode} params={params} />}
         mobileSearch={
           <SearchBar
             placeholder="Buscar camisetas…"
@@ -194,9 +175,7 @@ function CatalogResults({
   const query = params.get("q") || "";
   const categoryCode = params.get("categoryCode") || "";
   const initialPage = parseInt(params.get("page") || "0", 10);
-  const defaultSort = mode === "home" ? NEWEST_UPLOADS_SORT : RELEVANCE_SORT;
-  const options = sortOptions(mode);
-  const sortBy = params.get("sort") || defaultSort;
+  const sortBy = params.get("sort") || defaultSortFor(mode);
   const urlFilters = useMemo(
     () => readTagFilters<AlbumTagKey>(params, FILTER_KEYS),
     [params],
@@ -211,10 +190,6 @@ function CatalogResults({
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [collectionTitle, setCollectionTitle] = useState("");
-  const [pending, setPending] = useState(urlFilters);
-  const [sortOpen, setSortOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const sortDropdownRef = useRef<HTMLDivElement | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const hasFilters = FILTER_KEYS.some((k) => urlFilters[k]);
@@ -319,18 +294,6 @@ function CatalogResults({
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore]);
 
-  useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      if (!sortDropdownRef.current) return;
-      if (!sortDropdownRef.current.contains(event.target as Node)) {
-        setSortOpen(false);
-      }
-    };
-
-    window.addEventListener("mousedown", onPointerDown);
-    return () => window.removeEventListener("mousedown", onPointerDown);
-  }, []);
-
   /* ── Handlers ── */
 
   // Clearing the search may leave the search page with nothing to search
@@ -353,42 +316,12 @@ function CatalogResults({
     });
   };
 
-  const applyFilters = () =>
-    updateUrlSearchParams((p) => {
-      if (p.get("featured")) {
-        p.delete("featured");
-        p.delete("tab");
-      }
-      for (const k of FILTER_KEYS) {
-        if (pending[k]) p.set(k, "true");
-        else p.delete(k);
-      }
-      p.delete("page");
-    });
-
   const clearFilters = () =>
     updateUrlSearchParams((p) => {
       for (const k of FILTER_KEYS) p.delete(k);
       p.delete("sort");
       p.delete("page");
     });
-
-  const changeSort = (s: string) =>
-    updateUrlSearchParams((p) => {
-      if (p.get("featured")) {
-        p.delete("featured");
-        p.delete("tab");
-      }
-      if (s === defaultSort) p.delete("sort");
-      else p.set("sort", s);
-      p.delete("page");
-    });
-
-  const toggle = (k: AlbumTagKey) =>
-    setPending((prev) => ({ ...prev, [k]: !prev[k] }));
-
-  const currentSortLabel =
-    options.find((option) => option.value === sortBy)?.label || "Relevancia";
 
   /* ── Status line ── */
 
@@ -490,123 +423,23 @@ function CatalogResults({
 
       {error && <p className={styles.error}>{error}</p>}
 
-      <div className={styles.toolbar}>
-        <div className={styles.sortWrap} ref={sortDropdownRef}>
-          <span className={styles.sortLabel}>Ordenar por:</span>
-          <button
-            type="button"
-            className={styles.sortTrigger}
-            aria-haspopup="listbox"
-            aria-expanded={sortOpen}
-            onClick={() => setSortOpen((open) => !open)}
-          >
-            <span>{currentSortLabel}</span>
-            <svg viewBox="0 0 16 16" className={styles.chevron} aria-hidden="true">
-              <path
-                d="M4 6l4 4 4-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-
-          {sortOpen && (
-            <ul
-              className={styles.sortMenu}
-              role="listbox"
-              aria-label="Ordenar resultados"
-            >
-              {options.map((option) => (
-                <li key={option.value}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={sortBy === option.value}
-                    className={`${styles.sortOption} ${
-                      sortBy === option.value ? styles.sortOptionActive : ""
-                    }`}
-                    onClick={() => {
-                      setSortOpen(false);
-                      changeSort(option.value);
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+      {isLoading ? (
+        <p className={styles.message}>Cargando resultados…</p>
+      ) : albums.length === 0 && !error ? (
+        <p className={styles.message}>No se encontraron resultados.</p>
+      ) : (
+        <div className={styles.grid}>
+          {albums.map((album) => (
+            <AlbumTile key={album.id} album={album} />
+          ))}
         </div>
+      )}
 
-        <button
-          type="button"
-          className={styles.filterToggle}
-          aria-expanded={filtersOpen}
-          onClick={() => setFiltersOpen((o) => !o)}
-        >
-          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-            <path
-              d="M3 5h14M3 10h14M3 15h14"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          Filtros
-        </button>
-      </div>
-
-      <div className={styles.layout}>
-        <aside
-          className={`${styles.sidebar} ${filtersOpen ? styles.sidebarOpen : ""}`}
-        >
-          <h3 className={styles.sidebarHeading}>Filtros</h3>
-
-          <fieldset className={styles.filterGroup}>
-            <legend className={styles.groupLabel}>Categoría</legend>
-            {FILTER_KEYS.map((k) => (
-              <label key={k} className={styles.checkRow}>
-                <input
-                  type="checkbox"
-                  checked={pending[k]}
-                  onChange={() => toggle(k)}
-                  className={styles.checkbox}
-                />
-                <span>{TAG_LABELS[k]}</span>
-                {urlFilters[k] && <span className={styles.dot} />}
-              </label>
-            ))}
-          </fieldset>
-
-          <button className={styles.applyBtn} onClick={applyFilters} type="button">
-            Aplicar filtros
-          </button>
-        </aside>
-
-        <div className={styles.results}>
-          {isLoading ? (
-            <p className={styles.message}>Cargando resultados…</p>
-          ) : albums.length === 0 && !error ? (
-            <p className={styles.message}>No se encontraron resultados.</p>
-          ) : (
-            <div className={styles.grid}>
-              {albums.map((album) => (
-                <AlbumTile key={album.id} album={album} />
-              ))}
-            </div>
-          )}
-
-          {!isLoading && totalPages > 1 && hasMore && (
-            <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
-              {isLoadingMore ? "Cargando más resultados…" : ""}
-            </div>
-          )}
+      {!isLoading && totalPages > 1 && hasMore && (
+        <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
+          {isLoadingMore ? "Cargando más resultados…" : ""}
         </div>
-      </div>
+      )}
     </div>
   );
 }
