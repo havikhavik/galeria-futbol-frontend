@@ -7,12 +7,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  /* Same 1440px column as the hero and the gallery on wide screens. */
-  padding: 0
-    max(
-      var(--gf-space-gutter),
-      calc((100% - 1440px) / 2 + var(--gf-space-gutter))
-    );
+  padding: 0 var(--gf-space-gutter);
   color: var(--gf-color-ink);
   border-bottom: 1px solid transparent;
   transition: border-color var(--gf-dur-base) var(--gf-ease-out);
@@ -129,9 +124,14 @@
 }
 
 @media (min-width: 1001px) {
+  .iconButton {
+    width: 52px;
+    height: 52px;
+  }
+
   .instagram svg {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 }
 

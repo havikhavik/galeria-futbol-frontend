@@ -6,5 +6,5 @@
 .text{display:block}
 .brand[data-compact="true"]{gap:7px;font-size:.9rem}
 .brand[data-compact="true"] .mark{width:24px;height:24px}
-@media (min-width:1001px){.brand:not([data-compact="true"]) .mark{width:56px;height:56px}}
+@media (min-width:1001px){.brand:not([data-compact="true"]){gap:14px;font-size:1.75rem}.brand:not([data-compact="true"]) .mark{width:62px;height:62px}}
 @media (max-width:380px){.brand{gap:10px;font-size:1.26rem}.mark{width:36px;height:36px}}
