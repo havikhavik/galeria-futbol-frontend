@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useState } from "react";
 
+import { routes } from "../../../app/router/routes";
 import { Footer } from "../../../shared/components/Footer/Footer";
+import { navigateTo } from "../../../shared/utils/navigation";
 
 import { SiteHeader } from "./SiteHeader";
 import { StadiumBackground } from "./StadiumBackground";
@@ -75,7 +77,14 @@ function useChrome(dimmed: boolean): Chrome {
 function openMobileSearch() {
   const root = document.documentElement;
   const bar = document.querySelector<HTMLElement>(BAR_SELECTOR);
-  const gallery = bar?.parentElement;
+
+  // Pages without gallery (album detail): go to the search page.
+  if (!bar) {
+    navigateTo(routes.search);
+    return;
+  }
+
+  const gallery = bar.parentElement;
   if (gallery) {
     const top =
       gallery.getBoundingClientRect().top + window.scrollY - headerHeight() + 1;
@@ -84,7 +93,7 @@ function openMobileSearch() {
   }
   root.dataset.searchOpen = "true";
   bar
-    ?.querySelector<HTMLInputElement>("[data-mobile-search] input")
+    .querySelector<HTMLInputElement>("[data-mobile-search] input")
     ?.focus({ preventScroll: true });
 }
 

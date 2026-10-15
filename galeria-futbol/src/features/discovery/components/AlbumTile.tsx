@@ -9,9 +9,11 @@ import styles from "./AlbumTile.module.css";
 
 type AlbumTileProps = {
   album: AlbumResponse;
+  /** Query appended to the detail link (where the user came from). */
+  linkQuery?: string;
 };
 
-export function AlbumTile({ album }: AlbumTileProps) {
+export function AlbumTile({ album, linkQuery }: AlbumTileProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const details = [
     album.categoryCode || album.categoryName
@@ -23,7 +25,10 @@ export function AlbumTile({ album }: AlbumTileProps) {
     .join(" · ");
 
   return (
-    <a href={toAppPath(`/albums/${album.id}`)} className={styles.tile}>
+    <a
+      href={`${toAppPath(`/albums/${album.id}`)}${linkQuery ? `?${linkQuery}` : ""}`}
+      className={styles.tile}
+    >
       <div className={styles.photo}>
         {album.thumbnail && !imageFailed ? (
           <img
