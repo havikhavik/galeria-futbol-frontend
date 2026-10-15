@@ -1,49 +1,13 @@
-import { useCallback } from "react";
-
-import { routes, toAppPath } from "../app/router/routes";
+import { CatalogGallery } from "../features/discovery/components/CatalogGallery";
 import { HeroSection } from "../features/discovery/components/HeroSection";
-import { HomeHeader } from "../features/discovery/components/HomeHeader";
-import { NavigationCards } from "../features/discovery/components/NavigationCards";
-import { FeaturedCollectionsCarousel } from "../features/discovery/components/FeaturedCollectionsCarousel";
-import heroBackground from "../features/discovery/assets/hero.jpg";
-import { Footer } from "../shared/components/Footer/Footer";
-import { navigateWithCurrentUrl } from "../shared/utils/navigation";
-
-import styles from "./HomePage.module.css";
+import { PublicLayout } from "../features/discovery/components/PublicLayout";
+import { submitSearch } from "../shared/utils/navigation";
 
 export function HomePage() {
-  const handleSearchSubmit = useCallback((query: string) => {
-    navigateWithCurrentUrl((url) => {
-      url.pathname = toAppPath(routes.search);
-      url.search = "";
-      if (query) {
-        url.searchParams.set("q", query);
-      }
-    });
-  }, []);
-
   return (
-    <>
-      <main className={styles.page}>
-        <img
-          className={styles.backgroundImage}
-          src={heroBackground}
-          alt=""
-          aria-hidden="true"
-        />
-        <div className={styles.backgroundOverlay} aria-hidden="true" />
-        <div className={styles.container}>
-          <HomeHeader onSearchSubmit={handleSearchSubmit} />
-          <div className={styles.content}>
-            <HeroSection />
-            <NavigationCards />
-          </div>
-        </div>
-      </main>
-
-      <FeaturedCollectionsCarousel />
-
-      <Footer />
-    </>
+    <PublicLayout liveSearch>
+      <HeroSection onSearchSubmit={submitSearch} />
+      <CatalogGallery mode="home" />
+    </PublicLayout>
   );
 }

@@ -1,144 +1,58 @@
 .footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  height: 52px;
-  max-height: 60px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5, 8, 20, 0.6);
-  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--gf-color-line);
+  padding: 20px var(--gf-space-gutter)
+    calc(20px + env(safe-area-inset-bottom));
 }
 
 .container {
+  max-width: var(--gf-content-max);
+  margin: 0 auto;
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  height: 100%;
-  padding: 0 60px;
-  gap: 0.9rem;
-}
-
-.info,
-.right {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-}
-
-.info {
-  flex: 1;
-  justify-content: flex-start;
-  gap: 0.7rem;
-}
-
-.right {
-  flex: 0 0 auto;
-  justify-content: flex-end;
+  gap: 12px 24px;
 }
 
 .copyright {
   margin: 0;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--gf-color-ink-muted);
 }
 
-.socialButton {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  padding: 2px;
-  border-radius: 999px;
+.instagram {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
+  gap: 10px;
+  min-height: var(--gf-hit);
+  padding: 0 18px 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--gf-color-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
   text-decoration: none;
-  transition: all 0.2s ease;
 }
 
-.socialButton:hover,
-.socialButton:focus-visible {
-  color: #e1306c;
-  opacity: 1;
+.instagram:hover {
+  color: var(--gf-color-sunset);
 }
 
-.socialButton:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.55);
-  outline-offset: 2px;
+.instagram:focus-visible {
+  outline: 2px solid var(--gf-color-ink);
+  outline-offset: 3px;
 }
 
-.socialIcon {
-  width: 42px;
-  height: 42px;
-  display: block;
-  color: #ffffff;
-  opacity: 0.85;
-  cursor: pointer;
-  transition:
-    opacity 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+.instagramIcon {
+  width: 20px;
+  height: 20px;
 }
 
-.socialButton:hover .socialIcon,
-.socialButton:focus-visible .socialIcon {
-  opacity: 1;
-  color: #e1306c;
-  transform: scale(1.08);
-}
-
-@media (max-width: 920px) {
-  .footer {
-    position: static;
-    height: auto;
-    max-height: none;
-  }
-
+@media (max-width: 640px) {
   .container {
-    padding: 0.75rem 1rem;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.8rem;
-  }
-
-  .info {
     flex-direction: column;
-    justify-content: flex-start;
     align-items: flex-start;
-    gap: 0.25rem;
-    min-width: 0;
-  }
-
-  .copyright {
-    white-space: normal;
-    font-size: 0.8rem;
-    line-height: 1.2;
-  }
-
-  .right {
-    width: auto;
-  }
-
-  .socialButton {
-    width: 44px;
-    height: 44px;
-    flex-basis: 44px;
-  }
-
-  .socialIcon {
-    width: 38px;
-    height: 38px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .socialButton {
-    transition: none !important;
   }
 }

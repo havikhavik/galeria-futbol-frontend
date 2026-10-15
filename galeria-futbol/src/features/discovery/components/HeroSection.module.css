@@ -1,49 +1,122 @@
 .hero {
-  width: 100%;
-  max-width: none;
-  min-height: 42vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: left;
+  isolation: isolate;
+  min-height: 76svh;
+  max-width: var(--gf-content-max);
+  margin: 0 auto;
+  padding: 120px var(--gf-space-gutter) 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 28px 56px;
+}
+
+/* The hero content fades out while scrolling to the gallery, so the big title
+   doesn't show blurred through the translucent header once the bar pins:
+   fully visible until 40% of the way, gone just before the bar pins. */
+.lead,
+.side {
+  opacity: clamp(0, calc((0.8 - var(--p)) * 2.5), 1);
+}
+
+.lead {
+  position: relative;
+  display: grid;
+  gap: 18px;
+}
+
+.lead::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -30% 0 -20% -30%;
+  background: radial-gradient(
+    closest-side,
+    rgba(7, 18, 38, 0.82),
+    rgba(7, 18, 38, 0.55) 55%,
+    rgba(7, 18, 38, 0)
+  );
+  pointer-events: none;
+}
+
+.meta {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gf-color-sunset);
+}
+
+.metaPart {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.metaPart:last-child {
+  display: block;
+}
+
+.separator {
+  display: none;
 }
 
 .title {
   margin: 0;
-  width: 100%;
-  max-width: 100%;
-  font-size: clamp(3.6rem, 6.2vw, 6.8rem);
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: -0.02em;
-  color: #f8fbff;
+  font-size: clamp(3rem, 7.6vw, 8rem);
+  line-height: 0.86;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: var(--gf-color-ink);
 }
 
-.subtitle {
-  margin: 0.9rem 0 0;
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
-  color: rgba(236, 247, 255, 0.9);
+.side {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 6px;
 }
 
-.meta {
-  margin: 0.8rem 0 0;
-  font-size: clamp(1rem, 1.8vw, 1.4rem);
-  color: rgba(208, 232, 250, 0.8);
+/* One search field at a time: with a search active, the hero field hides
+   while the bar is pinned (the header one takes over). */
+:global(html[data-docked="true"][data-q-on="true"]) .search {
+  visibility: hidden;
 }
 
-@media (max-width: 900px) {
+.prompt {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--gf-color-ink-muted);
+}
+
+@media (min-width: 640px) {
+  .metaPart:last-child {
+    display: inline-block;
+  }
+
+  .separator {
+    display: inline;
+  }
+}
+
+@media (max-width: 640px) {
   .hero {
-    max-width: 100%;
-    min-height: 40vh;
+    min-height: 72svh;
+    grid-template-columns: 1fr;
+    padding: 96px var(--gf-space-gutter) 20px;
+    gap: 16px;
   }
 
   .title {
-    max-width: 100%;
+    font-size: clamp(2.7rem, 13vw, 4rem);
+  }
+
+  .prompt {
+    display: none;
   }
 }
 
-@media (min-width: 1200px) {
-  .title {
-    white-space: nowrap;
+@media (max-width: 380px) {
+  .meta {
+    letter-spacing: 0.1em;
   }
 }

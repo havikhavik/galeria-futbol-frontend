@@ -1,15 +1,48 @@
+import { SearchBar } from "../../../shared/components/SearchBar/SearchBar";
+import { useLiveSearchContext } from "../liveSearch";
+
 import styles from "./HeroSection.module.css";
 
-export function HeroSection() {
+type HeroSectionProps = {
+  /** Called with the trimmed query when the hero search is submitted. */
+  onSearchSubmit?: (query: string) => void;
+};
+
+export function HeroSection({ onSearchSubmit }: HeroSectionProps) {
+  const live = useLiveSearchContext();
+
   return (
     <section className={styles.hero} aria-labelledby="home-title">
-      <h1 id="home-title" className={styles.title}>
-        Encuentra tu camiseta perfecta
-      </h1>
-      <p className={styles.subtitle}>
-        Explora la galeria navegando por las diferentes categorias o introduce
-        el nombre de la camiseta en el buscador.
-      </p>
+      <div className={styles.lead}>
+        <p className={styles.meta}>
+          <span className={styles.metaPart}>Más de 4000 camisetas</span>
+          <span className={styles.separator}> · </span>
+          <span className={styles.metaPart}>27 ligas · 6 confederaciones</span>
+        </p>
+        <h1 id="home-title" className={styles.title}>
+          Camisetas de clubes y selecciones
+        </h1>
+      </div>
+      <div className={styles.side}>
+        <p className={styles.prompt}>
+          Buscá por club, selección, jugador o temporada.
+        </p>
+        <div className={styles.search} data-hero-search="">
+          {live ? (
+            <SearchBar
+              placeholder="Buscar por club, selección o temporada…"
+              value={live.value}
+              onChange={live.change}
+              onSubmit={live.commit}
+            />
+          ) : (
+            <SearchBar
+              placeholder="Buscar por club, selección o temporada…"
+              onSubmit={onSearchSubmit}
+            />
+          )}
+        </div>
+      </div>
     </section>
   );
 }

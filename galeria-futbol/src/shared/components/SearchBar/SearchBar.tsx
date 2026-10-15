@@ -1,19 +1,29 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 
 import styles from "./SearchBar.module.css";
 
 type SearchBarProps = {
   placeholder?: string;
+  /** Starting text when uncontrolled. */
   initialValue?: string;
+  /** Controlled text. When set, `onChange` receives every keystroke. */
+  value?: string;
+  onChange?: (value: string) => void;
+  /** Called with the trimmed text on Enter. */
   onSubmit?: (value: string) => void;
 };
 
 export function SearchBar({
   placeholder = "Buscar camisetas...",
   initialValue = "",
+  value,
+  onChange,
   onSubmit,
 }: SearchBarProps) {
-  const [query, setQuery] = useState(initialValue);
+  const [ownValue, setOwnValue] = useState(initialValue);
+  const inputId = useId();
+  const isControlled = value !== undefined;
+  const query = isControlled ? value : ownValue;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,7 +32,7 @@ export function SearchBar({
 
   return (
     <form className={styles.search} onSubmit={handleSubmit} role="search">
-      <label htmlFor="home-search" className={styles.srOnly}>
+      <label htmlFor={inputId} className={styles.srOnly}>
         Buscar camisetas
       </label>
       <button
@@ -36,11 +46,14 @@ export function SearchBar({
         </svg>
       </button>
       <input
-        id="home-search"
+        id={inputId}
         name="search"
         type="search"
         value={query}
-        onChange={(event) => setQuery(event.target.value)}
+        onChange={(event) => {
+          if (!isControlled) setOwnValue(event.target.value);
+          onChange?.(event.target.value);
+        }}
         className={styles.input}
         placeholder={placeholder}
         autoComplete="off"

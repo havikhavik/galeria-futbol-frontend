@@ -1,0 +1,42 @@
+.popover {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 55;
+  width: min(300px, calc(100vw - 24px));
+  max-height: var(--max-height, 70svh);
+  display: flex;
+  flex-direction: column;
+  color: var(--gf-color-ink);
+  background: var(--gf-surface-pop);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid rgba(237, 245, 255, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 28px 64px -18px rgba(0, 0, 0, 0.85);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--gf-dur-fast) var(--gf-ease-out),
+    transform var(--gf-dur-fast) var(--gf-ease-out),
+    visibility 0s linear var(--gf-dur-fast);
+}
+
+.open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+.narrow {
+  width: min(248px, calc(100vw - 24px));
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .popover {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

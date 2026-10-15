@@ -29,6 +29,28 @@
   --gf-surface-bar: rgba(7, 18, 38, 0.74);
   --gf-blur-bar: blur(18px) saturate(140%);
   --gf-surface-pop: rgba(12, 20, 42, 0.9);
+
+  /* Height of the fixed site header. */
+  --hh: 61px;
+
+  /* Scroll progress over the first 80% of the screen (0 to 1): darkens the
+     stadium and fades the hero. */
+  --p: 0;
+
+  /* Width of the content column (hero, bar, gallery, footer). */
+  --gf-content-max: 1440px;
+}
+
+@media (min-width: 1001px) {
+  :root {
+    --hh: 80px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --hh: 56px;
+  }
 }
 
 * {
@@ -49,4 +71,40 @@ body {
 
 a {
   color: inherit;
+}
+
+/* Large screens (QHD and up): wider column so the page uses the space. */
+@media (min-width: 2200px) {
+  :root {
+    --gf-content-max: 1920px;
+  }
+}
+
+/* Without backdrop-filter, translucent surfaces would be unreadable over the
+   stadium: make them nearly opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --gf-surface-bar: rgba(7, 18, 38, 0.95);
+    --gf-surface-pop: #0c142a;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --gf-surface-bar: rgba(7, 18, 38, 0.97);
+    --gf-surface-pop: #0c142a;
+    --gf-blur-bar: none;
+  }
+}
+
+/* Reduced motion: no transitions, animations or smooth scrolling. The
+   loading line stays still at 45% (see CategoryBar). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }
