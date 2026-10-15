@@ -397,6 +397,20 @@ function CatalogResults({
 
   if (hasFilters) chips.push(chip("filters", "Limpiar filtros", clearFilters));
 
+  // The detail page offers «Volver a {contexto}» back to this exact view.
+  const contextLabel =
+    tab !== "all" && selectedCode
+      ? String(title)
+      : query
+        ? `“${query}”`
+        : tab !== "all"
+          ? TAB_LABEL[tab]
+          : "la galería";
+  const detailQuery = new URLSearchParams({
+    ctx: contextLabel,
+    ret: `${window.location.pathname}${window.location.search}`,
+  }).toString();
+
   /* ── Render ── */
 
   return (
@@ -430,7 +444,7 @@ function CatalogResults({
       ) : (
         <div className={styles.grid}>
           {albums.map((album) => (
-            <AlbumTile key={album.id} album={album} />
+            <AlbumTile key={album.id} album={album} linkQuery={detailQuery} />
           ))}
         </div>
       )}
