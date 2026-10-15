@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useState } from "react";
 
 import styles from "./SearchBar.module.css";
 
@@ -14,6 +14,7 @@ export function SearchBar({
   onSubmit,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialValue);
+  const inputId = useId();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -22,7 +23,7 @@ export function SearchBar({
 
   return (
     <form className={styles.search} onSubmit={handleSubmit} role="search">
-      <label htmlFor="home-search" className={styles.srOnly}>
+      <label htmlFor={inputId} className={styles.srOnly}>
         Buscar camisetas
       </label>
       <button
@@ -36,7 +37,7 @@ export function SearchBar({
         </svg>
       </button>
       <input
-        id="home-search"
+        id={inputId}
         name="search"
         type="search"
         value={query}

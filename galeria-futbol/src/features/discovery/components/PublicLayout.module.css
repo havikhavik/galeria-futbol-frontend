@@ -1,0 +1,23 @@
+.page {
+  --hh: 61px;
+  color: var(--gf-color-ink);
+}
+
+.header {
+  max-width: 1440px;
+  min-height: var(--hh);
+  margin: 0 auto;
+  padding: 8px var(--gf-space-gutter);
+  display: flex;
+  align-items: center;
+}
+
+.header > * {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .page {
+    --hh: 56px;
+  }
+}
