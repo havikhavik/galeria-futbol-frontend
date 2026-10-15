@@ -2,10 +2,8 @@ import { useState } from "react";
 
 import { toAppPath } from "../../../app/router/routes";
 import type { AlbumResponse } from "../../../shared/types/albums";
-import {
-  formatCode,
-  normalizeSeasonLabel,
-} from "../../../shared/utils/formatters";
+import { normalizeSeasonLabel } from "../../../shared/utils/formatters";
+import { categoryDisplayName } from "../catalogTaxonomy";
 
 import styles from "./AlbumTile.module.css";
 
@@ -16,7 +14,9 @@ type AlbumTileProps = {
 export function AlbumTile({ album }: AlbumTileProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const details = [
-    album.categoryName ? formatCode(album.categoryName) : "",
+    album.categoryCode || album.categoryName
+      ? categoryDisplayName(album.categoryCode, album.categoryName)
+      : "",
     normalizeSeasonLabel(album.seasonLabel, album.seasonStart || null),
   ]
     .filter(Boolean)
