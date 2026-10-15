@@ -24,6 +24,9 @@ type CategoryBarProps = {
   mobileSearchPinned?: boolean;
   /** Filters and sort buttons, at the end of the first row. */
   tools?: ReactNode;
+  /** «Todas las ligas» panel, also opened from the empty results state. */
+  panelOpen: boolean;
+  onPanelOpenChange: (open: boolean) => void;
 };
 
 const TABS: { id: CatalogTab; label: string }[] = [
@@ -55,8 +58,9 @@ export function CategoryBar({
   mobileSearch,
   mobileSearchPinned = false,
   tools,
+  panelOpen,
+  onPanelOpenChange: setPanelOpen,
 }: CategoryBarProps) {
-  const [panelOpen, setPanelOpen] = useState(false);
   const [panelFilter, setPanelFilter] = useState("");
   const tabsRef = useRef<HTMLDivElement | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
@@ -113,7 +117,7 @@ export function CategoryBar({
       window.removeEventListener("keydown", onKeyDown);
       if (lock) root.style.overflow = "";
     };
-  }, [panelOpen]);
+  }, [panelOpen, setPanelOpen]);
 
   const selectTab = (next: CatalogTab) => {
     setPanelOpen(false);
@@ -189,7 +193,7 @@ export function CategoryBar({
                       aria-expanded={panelOpen}
                       aria-controls="all-leagues"
                       aria-label="Todas las ligas"
-                      onClick={() => setPanelOpen((open) => !open)}
+                      onClick={() => setPanelOpen(!panelOpen)}
                     >
                       <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                         <rect x="1" y="1" width="6" height="6" rx="1.5" />

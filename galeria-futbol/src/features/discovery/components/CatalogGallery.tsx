@@ -56,6 +56,7 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
   const live = useLiveSearchContext();
   const sectionRef = useRef<HTMLElement | null>(null);
   const [busy, setBusy] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const tab = readTab(params);
   const selected =
@@ -116,6 +117,8 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
         onSelectItem={selectItem}
         mobileSearchPinned={mode === "search"}
         tools={<CatalogTools mode={mode} params={params} />}
+        panelOpen={panelOpen}
+        onPanelOpenChange={setPanelOpen}
         mobileSearch={
           live ? (
             <SearchBar
@@ -142,6 +145,7 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
         taxonomy={taxonomy}
         onSelectTab={selectTab}
         onSelectItem={selectItem}
+        onOpenLeagues={() => setPanelOpen(true)}
       />
     </section>
   );
@@ -158,7 +162,22 @@ type CatalogResultsProps = {
   taxonomy: CatalogTaxonomy;
   onSelectTab: (tab: CatalogTab) => void;
   onSelectItem: (code: string | null) => void;
+  onOpenLeagues: () => void;
 };
+
+type EmptyAction = { label: string; primary?: boolean; onClick: () => void };
+
+const SKELETON_FIRST_LOAD = 12;
+const SKELETON_NEXT_PAGE = 4;
+
+const skeletons = (count: number) =>
+  Array.from({ length: count }, (_, i) => (
+    <div key={`skeleton-${i}`} className={styles.skeleton} aria-hidden="true">
+      <div className={styles.skeletonPhoto} />
+      <i />
+      <i />
+    </div>
+  ));
 
 function CatalogResults({
   criteriaKey,
@@ -169,6 +188,7 @@ function CatalogResults({
   taxonomy,
   onSelectTab,
   onSelectItem,
+  onOpenLeagues,
 }: CatalogResultsProps) {
   const live = useLiveSearchContext();
   const featuredSlug = params.get("featured") || "";
@@ -192,6 +212,10 @@ function CatalogResults({
     "initial",
   );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadMoreFailed, setLoadMoreFailed] = useState(false);
+  const [totalPages, setTotalPages] = useState(0);
+  // Bumped by «Reintentar» and «Cargar más» to repeat the last request.
+  const [attempt, setAttempt] = useState(0);
   const [collectionTitle, setCollectionTitle] = useState("");
   const requestSeq = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -202,7 +226,13 @@ function CatalogResults({
   if (loadedKey !== criteriaKey) {
     setLoadedKey(criteriaKey);
     setPage(0);
+    setLoadMoreFailed(false);
   }
+
+  const retry = () => {
+    setLoadMoreFailed(false);
+    setAttempt((n) => n + 1);
+  };
 
   useEffect(() => {
     onBusyChange(phase === "refreshing");
@@ -252,8 +282,15 @@ function CatalogResults({
     };
 
     const load = async () => {
-      if (firstPage) setPhase((prev) => (prev === "initial" ? "initial" : "refreshing"));
-      else setIsLoadingMore(true);
+      // Skeleton on the first load (and when retrying after an error);
+      // dimmed previous results on later searches.
+      if (firstPage) {
+        setPhase((prev) =>
+          prev === "initial" || prev === "error" ? "initial" : "refreshing",
+        );
+      } else {
+        setIsLoadingMore(true);
+      }
 
       try {
         if (isCollections) {
@@ -261,6 +298,7 @@ function CatalogResults({
           if (!isLatest()) return;
           setAlbums(collectionAlbums);
           setTotalElements(collectionAlbums.length);
+          setTotalPages(1);
           setHasMore(false);
           setPhase("ready");
           return;
@@ -276,12 +314,14 @@ function CatalogResults({
         const totalPages = data.totalPages ?? 0;
         setAlbums((prev) => (firstPage ? data.content : [...prev, ...data.content]));
         setTotalElements(data.totalElements ?? 0);
+        setTotalPages(totalPages);
         setHasMore(page < totalPages - 1);
         setPhase("ready");
       } catch {
         if (!isLatest()) return;
         if (firstPage) setPhase("error");
-        else setHasMore(false);
+        // A failed next page shows «Cargar más» instead of retrying on scroll.
+        else setLoadMoreFailed(true);
       } finally {
         if (isLatest()) setIsLoadingMore(false);
       }
@@ -291,10 +331,16 @@ function CatalogResults({
     return () => controller.abort();
     // criteriaKey stands for params, sortBy and the collection fields.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [criteriaKey, page]);
+  }, [criteriaKey, page, attempt]);
 
   useEffect(() => {
-    if (!loadMoreRef.current || phase !== "ready" || isLoadingMore || !hasMore) {
+    if (
+      !loadMoreRef.current ||
+      phase !== "ready" ||
+      isLoadingMore ||
+      loadMoreFailed ||
+      !hasMore
+    ) {
       return;
     }
 
@@ -309,7 +355,7 @@ function CatalogResults({
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMore, phase, isLoadingMore]);
+  }, [hasMore, phase, isLoadingMore, loadMoreFailed]);
 
   /* ── Handlers ── */
 
@@ -434,6 +480,72 @@ function CatalogResults({
     ret: `${window.location.pathname}${window.location.search}`,
   }).toString();
 
+  /* ── Empty and error states ── */
+
+  const searchEverywhere = () =>
+    updateUrlSearchParams((p) => {
+      ["teamType", "categoryCode", "featured", "tab", "page", ...FILTER_KEYS].forEach(
+        (k) => p.delete(k),
+      );
+    });
+
+  const retryAction: EmptyAction = { label: "Reintentar", primary: true, onClick: retry };
+
+  let empty: { title: string; text?: string; actions: EmptyAction[] };
+  if (phase === "error") {
+    empty = query
+      ? {
+          title: "No pudimos buscar ahora",
+          text: "Revisá tu conexión. Lo que escribiste sigue en el buscador.",
+          actions: [retryAction],
+        }
+      : { title: "No pudimos cargar las camisetas", actions: [retryAction] };
+  } else if (query) {
+    empty = {
+      title: `Sin resultados para «${query}»`,
+      text: "Revisá cómo está escrito o probá con el nombre del club, la selección o la temporada.",
+      actions: [
+        { label: "Borrar búsqueda", primary: true, onClick: clearQuery },
+        ...(tab !== "all" || hasFilters
+          ? [{ label: "Buscar en todo el catálogo", onClick: searchEverywhere }]
+          : []),
+      ],
+    };
+  } else if (tab !== "all" && selectedCode) {
+    empty = {
+      title: `Todavía no hay camisetas de ${String(title)}`,
+      text: `Seguimos sumando ligas y temporadas. Mientras tanto, probá con otra ${
+        tab === "club" ? "liga" : "categoría"
+      }.`,
+      actions:
+        tab === "club"
+          ? [
+              {
+                label: "Ver todos los clubes",
+                primary: true,
+                onClick: () => onSelectItem(null),
+              },
+              { label: "Elegir otra liga", onClick: onOpenLeagues },
+            ]
+          : [{ label: "Ver todo", primary: true, onClick: () => onSelectTab("all") }],
+    };
+  } else if (hasFilters) {
+    empty = {
+      title: "No hay camisetas con estos filtros",
+      text: "Probá quitando alguno.",
+      actions: [{ label: "Limpiar filtros", primary: true, onClick: clearFilters }],
+    };
+  } else {
+    empty = {
+      title: "Todavía no hay camisetas acá",
+      text: "Seguimos sumando ligas y temporadas.",
+      actions:
+        tab !== "all"
+          ? [{ label: "Ver todo", primary: true, onClick: () => onSelectTab("all") }]
+          : [],
+    };
+  }
+
   /* ── Render ── */
 
   return (
@@ -466,25 +578,55 @@ function CatalogResults({
 
       <div className={`${styles.results} ${phase === "refreshing" ? styles.busy : ""}`}>
         {phase === "initial" ? (
-          <p className={styles.message}>Cargando resultados…</p>
-        ) : phase === "error" ? (
-          <p className={styles.error}>
-            No pudimos cargar los resultados. Intenta nuevamente.
-          </p>
-        ) : albums.length === 0 ? (
-          <p className={styles.message}>No se encontraron resultados.</p>
+          <div className={styles.grid}>{skeletons(SKELETON_FIRST_LOAD)}</div>
+        ) : phase === "error" || albums.length === 0 ? (
+          <div className={styles.empty}>
+            <h3>{empty.title}</h3>
+            {empty.text && <p>{empty.text}</p>}
+            {empty.actions.length > 0 && (
+              <div className={styles.actions}>
+                {empty.actions.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    className={`${styles.button} ${
+                      action.primary ? styles.buttonPrimary : styles.buttonSecondary
+                    }`}
+                    onClick={action.onClick}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
-          <div className={styles.grid}>
-            {albums.map((album) => (
-              <AlbumTile key={album.id} album={album} linkQuery={detailQuery} />
-            ))}
-          </div>
-        )}
+          <>
+            <div className={styles.grid}>
+              {albums.map((album) => (
+                <AlbumTile key={album.id} album={album} linkQuery={detailQuery} />
+              ))}
+              {isLoadingMore && skeletons(SKELETON_NEXT_PAGE)}
+            </div>
 
-        {phase === "ready" && hasMore && (
-          <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
-            {isLoadingMore ? "Cargando más resultados…" : ""}
-          </div>
+            {hasMore && !loadMoreFailed && (
+              <div ref={loadMoreRef} className={styles.loadMoreTrigger} />
+            )}
+            {loadMoreFailed && (
+              <div className={styles.more}>
+                <button
+                  type="button"
+                  className={`${styles.button} ${styles.buttonSecondary}`}
+                  onClick={retry}
+                >
+                  Cargar más
+                </button>
+              </div>
+            )}
+            {!hasMore && totalPages > 1 && (
+              <p className={styles.end}>Llegaste al final</p>
+            )}
+          </>
         )}
       </div>
     </div>

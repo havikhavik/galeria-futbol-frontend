@@ -4,16 +4,123 @@
   padding: calc(var(--hh) + 20px) var(--gf-space-gutter) 72px;
 }
 
-.message {
-  margin: 2rem 0;
+
+
+/* ── Loading, not found and error ── */
+
+.stage.skeletonBlock {
+  cursor: default;
+  background: linear-gradient(
+      100deg,
+      rgba(255, 255, 255, 0.04) 30%,
+      rgba(255, 255, 255, 0.09) 50%,
+      rgba(255, 255, 255, 0.04) 70%
+    )
+    0 0 / 300% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+.skeletonLine {
+  display: block;
+  height: 16px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.skeletonShort {
+  width: 40%;
+}
+
+.skeletonTitle {
+  width: 85%;
+  height: 44px;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -150% 0;
+  }
+}
+
+.state {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: 520px;
+  padding: 56px 0 24px;
+}
+
+.state h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.state p {
+  margin: 0;
   font-size: 0.95rem;
   color: var(--gf-color-ink-muted);
 }
 
-.error {
-  margin: 2rem 0;
-  font-size: 0.95rem;
-  color: #ffb4b4;
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 6px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gf-color-ink);
+  color: var(--gf-color-page);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--gf-dur-fast) var(--gf-ease-out),
+    transform var(--gf-dur-fast) var(--gf-ease-out);
+}
+
+.primaryButton:hover {
+  background: #fff;
+}
+
+.primaryButton:active {
+  transform: scale(0.98);
+}
+
+.primaryButton:focus-visible {
+  outline: 2px solid var(--gf-color-ink);
+  outline-offset: 3px;
+}
+
+/* Photo that fails to load: navy frame with an image icon at 40%. */
+.photoFallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0b1228;
+  color: rgba(237, 245, 255, 0.4);
+}
+
+.photoFallback svg {
+  width: 30%;
+  max-width: 64px;
+  height: auto;
+}
+
+.thumb {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage.skeletonBlock {
+    animation: none;
+  }
 }
 
 /* ── Back link and breadcrumbs ── */
@@ -550,6 +657,11 @@
   min-height: 0;
 }
 
+.lightboxImage .photoFallback {
+  position: static;
+  background: none;
+}
+
 .lightboxImage img {
   width: 100%;
   height: 100%;
@@ -614,9 +726,8 @@
     padding: 0 var(--gf-space-gutter);
   }
 
-  .message,
-  .error {
-    padding: 0 var(--gf-space-gutter);
+  .state {
+    padding-inline: var(--gf-space-gutter);
   }
 
   .detail {
