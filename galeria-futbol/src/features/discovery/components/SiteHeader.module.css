@@ -9,17 +9,17 @@
   gap: 16px;
   padding: 0 var(--gf-space-gutter);
   color: var(--gf-color-ink);
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--gf-dur-base) var(--gf-ease-out);
 }
 
-/* Translucent surface. While the category bar is pinned, the bar draws a
-   single surface behind both, so this one fades out. */
+/* Translucent surface, with its bottom line, faded in as one piece. While
+   the category bar is pinned, the bar draws a single surface behind both,
+   so this one fades out. */
 .header::before {
   content: "";
   position: absolute;
-  inset: 0 0 -1px;
+  inset: 0;
   z-index: -1;
+  border-bottom: 1px solid var(--gf-color-line);
   background: var(--gf-surface-bar);
   -webkit-backdrop-filter: var(--gf-blur-bar);
   backdrop-filter: var(--gf-blur-bar);
@@ -32,16 +32,8 @@
   opacity: 1;
 }
 
-.solid {
-  border-bottom-color: var(--gf-color-line);
-}
-
 .docked::before {
   opacity: 0;
-}
-
-.docked {
-  border-bottom-color: transparent;
 }
 
 .logo {

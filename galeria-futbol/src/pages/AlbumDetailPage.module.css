@@ -79,9 +79,7 @@
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  transition:
-    background-color var(--gf-dur-fast) var(--gf-ease-out),
-    transform var(--gf-dur-fast) var(--gf-ease-out);
+  transition: transform var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .primaryButton:hover {
@@ -237,9 +235,7 @@
   opacity: 0.62;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
   cursor: pointer;
-  transition:
-    opacity var(--gf-dur-fast) var(--gf-ease-out),
-    box-shadow var(--gf-dur-fast) var(--gf-ease-out);
+  transition: opacity var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .thumb img {
@@ -328,9 +324,6 @@
   font: inherit;
   font-size: 1.05rem;
   cursor: pointer;
-  transition:
-    border-color var(--gf-dur-fast) var(--gf-ease-out),
-    background-color var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .nav:hover:not(:disabled) {

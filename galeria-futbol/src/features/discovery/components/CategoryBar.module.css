@@ -4,17 +4,18 @@
   z-index: 30;
   isolation: isolate;
   color: var(--gf-color-ink);
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--gf-dur-base) var(--gf-ease-out);
 }
 
 /* Shared surface: once pinned, it also covers the header above it, so header
-   and bar read as one piece with no line between them. */
+   and bar read as one piece with no line between them. Its bottom line and
+   shadow fade in with it. */
 .bar::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
+  border-bottom: 1px solid rgba(237, 245, 255, 0.1);
+  box-shadow: 0 20px 30px -26px rgba(0, 0, 0, 0.9);
   background: var(--gf-surface-bar);
   -webkit-backdrop-filter: var(--gf-blur-bar);
   backdrop-filter: var(--gf-blur-bar);
@@ -26,11 +27,6 @@
 :global(html[data-docked="true"]) .bar::before {
   opacity: 1;
   top: calc(var(--hh) * -1);
-}
-
-:global(html[data-docked="true"]) .bar {
-  border-bottom-color: rgba(237, 245, 255, 0.1);
-  box-shadow: 0 20px 30px -26px rgba(0, 0, 0, 0.9);
 }
 
 .inner {
@@ -114,9 +110,6 @@
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color var(--gf-dur-fast) var(--gf-ease-out),
-    color var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .tabWithIcon {
@@ -152,28 +145,21 @@
 
 /* ── Level 2: leagues, confederations or collections ── */
 
-.level2Wrap {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--gf-dur-base) var(--gf-ease-out);
-}
-
-.level2Open {
-  grid-template-rows: 1fr;
-}
-
-/* Collapses the row while it animates open. */
-.level2Wrap > div {
-  overflow: hidden;
-  min-height: 0;
-}
-
+/* The second row appears with a fade (only opacity and transform animate). */
 .level2 {
   position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 0 0 12px;
+  animation: rowIn var(--gf-dur-base) var(--gf-ease-out);
+}
+
+@keyframes rowIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .openAll {
@@ -279,9 +265,6 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    border-color var(--gf-dur-fast) var(--gf-ease-out),
-    background-color var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .chip_nat {
@@ -583,7 +566,6 @@
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .tile img,

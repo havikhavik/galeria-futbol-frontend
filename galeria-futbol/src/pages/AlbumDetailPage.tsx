@@ -11,6 +11,7 @@ import type { AlbumResponse, ImageResponse } from "../shared/types/albums";
 import type { HttpClientError, PageResponse } from "../shared/types/common";
 import { albumTags } from "../shared/utils/albumHelpers";
 import { normalizeSeasonLabel } from "../shared/utils/formatters";
+import { useFocusTrap } from "../shared/hooks/useFocusTrap";
 import { readSearchParams } from "../shared/utils/parsers";
 
 import styles from "./AlbumDetailPage.module.css";
@@ -63,6 +64,8 @@ export function AlbumDetailPage() {
   const [related, setRelated] = useState<AlbumResponse[]>([]);
   const fullButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lightboxRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(lightboxRef, lightbox);
 
   useEffect(() => {
     let cancelled = false;
@@ -465,6 +468,7 @@ export function AlbumDetailPage() {
 
       {album && photo && (
         <div
+          ref={lightboxRef}
           className={`${styles.lightbox} ${lightbox ? styles.lightboxOpen : ""}`}
           role="dialog"
           aria-modal="true"

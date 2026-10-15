@@ -45,3 +45,9 @@
       rgba(7, 18, 38, calc(var(--p) * 0.72));
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .image {
+    transform: none;
+  }
+}

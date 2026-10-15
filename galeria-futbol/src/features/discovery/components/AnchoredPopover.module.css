@@ -33,3 +33,10 @@
 .narrow {
   width: min(248px, calc(100vw - 24px));
 }
+
+@media (prefers-reduced-transparency: reduce) {
+  .popover {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

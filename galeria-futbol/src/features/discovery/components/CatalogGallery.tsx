@@ -546,11 +546,25 @@ function CatalogResults({
     };
   }
 
+  // Short message for screen readers: how many results, or why there are
+  // none. Empty while loading, so only the outcome is announced.
+  const announcement = live?.showHint
+    ? "Seguí escribiendo: la búsqueda empieza con 2 letras."
+    : phase === "error" || (phase === "ready" && albums.length === 0)
+      ? empty.title
+      : phase === "ready"
+        ? `${countLabel(totalElements)}${query ? ` para «${query}»` : ""}`
+        : "";
+
   /* ── Render ── */
 
   return (
     <div className={styles.inner}>
-      <div className={styles.status} aria-live="polite">
+      <p className={styles.srOnly} aria-live="polite">
+        {announcement}
+      </p>
+
+      <div className={styles.status}>
         <div className={styles.statusLead}>
           {image && (
             <img
