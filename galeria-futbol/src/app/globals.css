@@ -9,6 +9,26 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --gf-color-page: #071226;
+  --gf-color-ink: #edf5ff;
+  --gf-color-ink-muted: rgba(237, 245, 255, 0.74);
+  --gf-color-line: rgba(237, 245, 255, 0.14);
+  --gf-color-sunset: #ffa95f;
+  --gf-color-pitch: #80ff98;
+
+  --gf-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --gf-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+  --gf-dur-fast: 160ms;
+  --gf-dur-base: 240ms;
+  --gf-dur-slow: 480ms;
+
+  --gf-space-gutter: clamp(16px, 5vw, 72px);
+  --gf-hit: 44px;
+
+  --gf-surface-bar: rgba(7, 18, 38, 0.74);
+  --gf-blur-bar: blur(18px) saturate(140%);
+  --gf-surface-pop: rgba(12, 20, 42, 0.9);
 }
 
 * {
