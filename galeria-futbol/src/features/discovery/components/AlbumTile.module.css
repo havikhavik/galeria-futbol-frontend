@@ -65,3 +65,13 @@
     font-size: 0.92rem;
   }
 }
+
+@media (min-width: 2200px) {
+  .title {
+    font-size: 1.12rem;
+  }
+
+  .details {
+    font-size: 0.92rem;
+  }
+}

@@ -22,6 +22,8 @@ type CategoryBarProps = {
   /** Keep the mobile search field visible (search page). Otherwise it shows
       only while the bar is pinned and the user asked for search. */
   mobileSearchPinned?: boolean;
+  /** Filters and sort buttons, at the end of the first row. */
+  tools?: ReactNode;
 };
 
 const TABS: { id: CatalogTab; label: string }[] = [
@@ -52,6 +54,7 @@ export function CategoryBar({
   onSelectItem,
   mobileSearch,
   mobileSearchPinned = false,
+  tools,
 }: CategoryBarProps) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelFilter, setPanelFilter] = useState("");
@@ -167,6 +170,7 @@ export function CategoryBar({
                 </button>
               ))}
             </div>
+            {tools}
           </div>
 
           <div

@@ -32,6 +32,9 @@
 
   /* Height of the fixed site header. */
   --hh: 61px;
+
+  /* Width of the content column (hero, bar, gallery, footer). */
+  --gf-content-max: 1440px;
 }
 
 @media (min-width: 1001px) {
@@ -64,4 +67,11 @@ body {
 
 a {
   color: inherit;
+}
+
+/* Large screens (QHD and up): wider column so the page uses the space. */
+@media (min-width: 2200px) {
+  :root {
+    --gf-content-max: 1920px;
+  }
 }
