@@ -11,6 +11,9 @@ export function readTagFilters<K extends string>(
   >;
 }
 
+/** Sort value meaning "let the API rank by relevance" (sent as no sort). */
+export const RELEVANCE_SORT = "relevance";
+
 type BuildAlbumsApiPathOptions = {
   pageSize?: number;
   filterKeys?: readonly AlbumTagKey[];
@@ -43,7 +46,7 @@ export function buildAlbumsApiPath(
   out.set("size", String(pageSize));
 
   const sort = params.get("sort");
-  if (sort) out.set("sort", sort);
+  if (sort && sort !== RELEVANCE_SORT) out.set("sort", sort);
 
   return `albums?${out.toString()}`;
 }

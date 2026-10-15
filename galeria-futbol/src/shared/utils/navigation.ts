@@ -30,3 +30,13 @@ export function navigateWithCurrentUrl(
   mutate(url);
   commitNavigation(url, replace);
 }
+
+export function submitSearch(query: string): void {
+  navigateWithCurrentUrl((url) => {
+    url.pathname = toAppPath("/search");
+    url.search = "";
+    if (query) {
+      url.searchParams.set("q", query);
+    }
+  });
+}
