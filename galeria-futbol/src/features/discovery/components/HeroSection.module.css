@@ -1,11 +1,9 @@
-/* The header still sits in the page flow (it becomes fixed in the next
-   step), so its height is taken out of the hero to keep the same total. */
 .hero {
   isolation: isolate;
-  min-height: calc(76svh - var(--hh));
+  min-height: 76svh;
   max-width: 1440px;
   margin: 0 auto;
-  padding: calc(120px - var(--hh)) var(--gf-space-gutter) 36px;
+  padding: 120px var(--gf-space-gutter) 36px;
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   align-items: end;
@@ -88,9 +86,9 @@
 
 @media (max-width: 640px) {
   .hero {
-    min-height: calc(72svh - var(--hh));
+    min-height: 72svh;
     grid-template-columns: 1fr;
-    padding: calc(96px - var(--hh)) var(--gf-space-gutter) 20px;
+    padding: 96px var(--gf-space-gutter) 20px;
     gap: 16px;
   }
 

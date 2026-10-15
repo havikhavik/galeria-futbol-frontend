@@ -1,6 +1,0 @@
-/* Category cards stay until the category bar replaces them. */
-.navigation {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 24px var(--gf-space-gutter) 48px;
-}
