@@ -256,10 +256,7 @@
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color var(--gf-dur-fast) var(--gf-ease-out),
-    border-color var(--gf-dur-fast) var(--gf-ease-out),
-    transform var(--gf-dur-fast) var(--gf-ease-out);
+  transition: transform var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .button:active {

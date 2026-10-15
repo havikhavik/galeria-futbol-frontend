@@ -1,9 +1,11 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
+import { useFocusTrap } from "../../../shared/hooks/useFocusTrap";
 import { type ScrollEdges, useScrollEdges } from "../../../shared/hooks/useScrollEdges";
 import nationalIcon from "../assets/icono-pelota-sm.png";
 import clubIcon from "../assets/icono-copa-sm.png";
 import { LEAGUE_REGIONS } from "../catalogTaxonomy";
+import { prefersReducedMotion } from "../galleryScroll";
 import type { CatalogItem, CatalogTaxonomy } from "../useCatalogTaxonomy";
 
 import styles from "./CategoryBar.module.css";
@@ -42,6 +44,9 @@ const ITEMS_LABEL: Record<Exclude<CatalogTab, "all">, string> = {
   col: "Colecciones",
 };
 
+const scrollBehavior = (): ScrollBehavior =>
+  prefersReducedMotion() ? "auto" : "smooth";
+
 const edgeClasses = (edges: ScrollEdges) =>
   [
     edges.overflows ? styles.overflows : "",
@@ -66,6 +71,7 @@ export function CategoryBar({
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const openAllRef = useRef<HTMLButtonElement | null>(null);
   const filterRef = useRef<HTMLInputElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const items: CatalogItem[] =
     tab === "nat"
@@ -77,6 +83,7 @@ export function CategoryBar({
           : [];
 
   const tabsEdges = useScrollEdges(tabsRef, taxonomy);
+  useFocusTrap(panelRef, panelOpen && tab === "club");
   const chipsEdges = useScrollEdges(scrollerRef, `${tab}:${items.length}`);
 
   const closePanel = (returnFocus: boolean) => {
@@ -177,98 +184,91 @@ export function CategoryBar({
             {tools}
           </div>
 
-          <div
-            className={`${styles.level2Wrap} ${
-              tab !== "all" ? styles.level2Open : ""
-            }`}
-          >
-            <div>
-              {tab !== "all" && (
-                <div className={styles.level2}>
-                  {tab === "club" && (
+          {tab !== "all" && (
+            <div className={styles.level2}>
+              {tab === "club" && (
+                <button
+                  ref={openAllRef}
+                  type="button"
+                  className={styles.openAll}
+                  aria-expanded={panelOpen}
+                  aria-controls="all-leagues"
+                  aria-label="Todas las ligas"
+                  onClick={() => setPanelOpen(!panelOpen)}
+                >
+                  <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <rect x="1" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="1" y="9" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="9" width="6" height="6" rx="1.5" />
+                  </svg>
+                  <span className={styles.openAllLabel}>Todas las ligas</span>
+                </button>
+              )}
+
+              <div className={styles.scrollerWrap}>
+                <div
+                  ref={scrollerRef}
+                  className={`${styles.scroller} ${edgeClasses(chipsEdges)}`}
+                  role="group"
+                  aria-label={ITEMS_LABEL[tab]}
+                >
+                  {items.map((item) => (
                     <button
-                      ref={openAllRef}
+                      key={item.code}
                       type="button"
-                      className={styles.openAll}
-                      aria-expanded={panelOpen}
-                      aria-controls="all-leagues"
-                      aria-label="Todas las ligas"
-                      onClick={() => setPanelOpen(!panelOpen)}
+                      className={`${styles.chip} ${styles[`chip_${tab}`]}`}
+                      aria-pressed={selected === item.code}
+                      onClick={() =>
+                        onSelectItem(selected === item.code ? null : item.code)
+                      }
                     >
-                      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                        <rect x="1" y="1" width="6" height="6" rx="1.5" />
-                        <rect x="9" y="1" width="6" height="6" rx="1.5" />
-                        <rect x="1" y="9" width="6" height="6" rx="1.5" />
-                        <rect x="9" y="9" width="6" height="6" rx="1.5" />
-                      </svg>
-                      <span className={styles.openAllLabel}>Todas las ligas</span>
+                      {item.image ? (
+                        <img src={item.image} alt="" referrerPolicy="no-referrer" />
+                      ) : (
+                        <span className={styles.chipImagePlaceholder} />
+                      )}
+                      {item.name}
                     </button>
-                  )}
-
-                  <div className={styles.scrollerWrap}>
-                    <div
-                      ref={scrollerRef}
-                      className={`${styles.scroller} ${edgeClasses(chipsEdges)}`}
-                      role="group"
-                      aria-label={ITEMS_LABEL[tab]}
-                    >
-                      {items.map((item) => (
-                        <button
-                          key={item.code}
-                          type="button"
-                          className={`${styles.chip} ${styles[`chip_${tab}`]}`}
-                          aria-pressed={selected === item.code}
-                          onClick={() =>
-                            onSelectItem(selected === item.code ? null : item.code)
-                          }
-                        >
-                          {item.image ? (
-                            <img src={item.image} alt="" referrerPolicy="no-referrer" />
-                          ) : (
-                            <span className={styles.chipImagePlaceholder} />
-                          )}
-                          {item.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {tab === "club" && (
-                    <>
-                      <button
-                        type="button"
-                        className={styles.arrow}
-                        aria-label="Ligas anteriores"
-                        hidden={!chipsEdges.scrolled}
-                        onClick={() =>
-                          scrollerRef.current?.scrollBy({ left: -320, behavior: "smooth" })
-                        }
-                      >
-                        ←
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.arrow}
-                        aria-label="Ver más ligas"
-                        hidden={!chipsEdges.overflows || chipsEdges.atEnd}
-                        onClick={() =>
-                          scrollerRef.current?.scrollBy({ left: 320, behavior: "smooth" })
-                        }
-                      >
-                        →
-                      </button>
-                    </>
-                  )}
+                  ))}
                 </div>
+              </div>
+
+              {tab === "club" && (
+                <>
+                  <button
+                    type="button"
+                    className={styles.arrow}
+                    aria-label="Ligas anteriores"
+                    hidden={!chipsEdges.scrolled}
+                    onClick={() =>
+                      scrollerRef.current?.scrollBy({ left: -320, behavior: scrollBehavior() })
+                    }
+                  >
+                    ←
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.arrow}
+                    aria-label="Ver más ligas"
+                    hidden={!chipsEdges.overflows || chipsEdges.atEnd}
+                    onClick={() =>
+                      scrollerRef.current?.scrollBy({ left: 320, behavior: scrollBehavior() })
+                    }
+                  >
+                    →
+                  </button>
+                </>
               )}
             </div>
-          </div>
+          )}
         </div>
 
         <div className={styles.progress} aria-hidden="true" />
 
         {tab === "club" && (
           <div
+            ref={panelRef}
             id="all-leagues"
             className={`${styles.panel} ${panelOpen ? styles.panelOpen : ""}`}
             role="dialog"

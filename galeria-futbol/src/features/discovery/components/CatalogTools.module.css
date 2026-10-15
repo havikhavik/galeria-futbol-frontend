@@ -23,10 +23,6 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    background-color var(--gf-dur-fast) var(--gf-ease-out),
-    border-color var(--gf-dur-fast) var(--gf-ease-out),
-    color var(--gf-dur-fast) var(--gf-ease-out);
 }
 
 .tool:hover {

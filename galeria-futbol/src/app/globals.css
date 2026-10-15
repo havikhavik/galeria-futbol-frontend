@@ -79,3 +79,32 @@ a {
     --gf-content-max: 1920px;
   }
 }
+
+/* Without backdrop-filter, translucent surfaces would be unreadable over the
+   stadium: make them nearly opaque. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --gf-surface-bar: rgba(7, 18, 38, 0.95);
+    --gf-surface-pop: #0c142a;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --gf-surface-bar: rgba(7, 18, 38, 0.97);
+    --gf-surface-pop: #0c142a;
+    --gf-blur-bar: none;
+  }
+}
+
+/* Reduced motion: no transitions, animations or smooth scrolling. The
+   loading line stays still at 45% (see CategoryBar). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
