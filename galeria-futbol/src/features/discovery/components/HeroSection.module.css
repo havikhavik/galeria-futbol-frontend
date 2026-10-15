@@ -1,7 +1,7 @@
 .hero {
   isolation: isolate;
   min-height: 76svh;
-  max-width: 1440px;
+  max-width: var(--gf-content-max);
   margin: 0 auto;
   padding: 120px var(--gf-space-gutter) 36px;
   display: grid;

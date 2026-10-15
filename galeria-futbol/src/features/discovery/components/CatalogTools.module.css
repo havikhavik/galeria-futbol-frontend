@@ -275,3 +275,18 @@
     box-shadow: 0 0 0 2px var(--gf-color-page);
   }
 }
+
+/* Large screens: bigger controls to match the wider column. */
+@media (min-width: 2200px) {
+  .tool {
+    min-width: 52px;
+    min-height: 52px;
+    padding: 0 20px;
+    font-size: 0.95rem;
+  }
+
+  .tool svg {
+    width: 22px;
+    height: 22px;
+  }
+}
