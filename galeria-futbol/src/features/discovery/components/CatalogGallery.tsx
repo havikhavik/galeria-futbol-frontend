@@ -15,6 +15,8 @@ import { navigateWithCurrentUrl, submitSearch } from "../../../shared/utils/navi
 import { buildAlbumsApiPath, readTagFilters } from "../../../shared/utils/queryHelpers";
 import { type GalleryMode, defaultSortFor } from "../catalogSort";
 import { categoryDisplayName } from "../catalogTaxonomy";
+import { scrollToGallery } from "../galleryScroll";
+import { useLiveSearchContext } from "../liveSearch";
 import { type CatalogTaxonomy, useCatalogTaxonomy } from "../useCatalogTaxonomy";
 
 import { AlbumTile } from "./AlbumTile";
@@ -48,35 +50,16 @@ function readTab(params: URLSearchParams): CatalogTab {
   return "all";
 }
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function headerHeight(): number {
-  const value = getComputedStyle(document.documentElement).getPropertyValue("--hh");
-  return parseFloat(value) || 61;
-}
-
 export function CatalogGallery({ mode }: CatalogGalleryProps) {
   const params = useUrlSearchParams();
   const taxonomy = useCatalogTaxonomy();
+  const live = useLiveSearchContext();
   const sectionRef = useRef<HTMLElement | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const tab = readTab(params);
   const selected =
     tab === "col" ? params.get("featured") : params.get("categoryCode");
-
-  // Scrolls back to the top of the gallery when a change is made from
-  // further down, so the new results start in view.
-  const scrollToGallery = () => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const top =
-      section.getBoundingClientRect().top + window.scrollY - headerHeight() + 1;
-    if (window.scrollY > top - 2) {
-      window.scrollTo({ top, behavior: prefersReducedMotion() ? "auto" : "smooth" });
-    }
-  };
 
   const selectTab = (next: CatalogTab) => {
     updateUrlSearchParams((p) => {
@@ -110,7 +93,7 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
   };
 
   // Results restart from the first page whenever the criteria change.
-  const resultsKey = useMemo(() => {
+  const criteriaKey = useMemo(() => {
     const criteria = new URLSearchParams(params);
     criteria.delete("page");
     return criteria.toString();
@@ -123,6 +106,7 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
         mode === "search" ? styles.galleryUnderHeader : ""
       }`}
       aria-label="Catálogo"
+      data-busy={busy ? "true" : undefined}
     >
       <CategoryBar
         taxonomy={taxonomy}
@@ -133,15 +117,25 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
         mobileSearchPinned={mode === "search"}
         tools={<CatalogTools mode={mode} params={params} />}
         mobileSearch={
-          <SearchBar
-            placeholder="Buscar camisetas…"
-            initialValue={params.get("q") || ""}
-            onSubmit={submitSearch}
-          />
+          live ? (
+            <SearchBar
+              placeholder="Buscar camisetas…"
+              value={live.value}
+              onChange={live.change}
+              onSubmit={live.commit}
+            />
+          ) : (
+            <SearchBar
+              placeholder="Buscar camisetas…"
+              initialValue={params.get("q") || ""}
+              onSubmit={submitSearch}
+            />
+          )
         }
       />
       <CatalogResults
-        key={resultsKey}
+        criteriaKey={criteriaKey}
+        onBusyChange={setBusy}
         mode={mode}
         params={params}
         tab={tab}
@@ -154,6 +148,10 @@ export function CatalogGallery({ mode }: CatalogGalleryProps) {
 }
 
 type CatalogResultsProps = {
+  /** Query string without paging: a change starts a new first page. */
+  criteriaKey: string;
+  /** A new first page is loading while the previous results stay in view. */
+  onBusyChange: (busy: boolean) => void;
   mode: GalleryMode;
   params: URLSearchParams;
   tab: CatalogTab;
@@ -163,6 +161,8 @@ type CatalogResultsProps = {
 };
 
 function CatalogResults({
+  criteriaKey,
+  onBusyChange,
   mode,
   params,
   tab,
@@ -170,50 +170,74 @@ function CatalogResults({
   onSelectTab,
   onSelectItem,
 }: CatalogResultsProps) {
+  const live = useLiveSearchContext();
   const featuredSlug = params.get("featured") || "";
   const isCollections = tab === "col";
   const query = params.get("q") || "";
   const categoryCode = params.get("categoryCode") || "";
-  const initialPage = parseInt(params.get("page") || "0", 10);
-  const sortBy = params.get("sort") || defaultSortFor(mode);
+  const sortBy = params.get("sort") || defaultSortFor(mode, query);
   const urlFilters = useMemo(
     () => readTagFilters<AlbumTagKey>(params, FILTER_KEYS),
     [params],
   );
 
   const [albums, setAlbums] = useState<AlbumResponse[]>([]);
-  const [page, setPage] = useState(initialPage);
+  const [page, setPage] = useState(0);
+  const [loadedKey, setLoadedKey] = useState(criteriaKey);
   const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  // "initial": first load, nothing to show yet. "refreshing": new criteria,
+  // the previous results stay in view until the answer arrives.
+  const [phase, setPhase] = useState<"initial" | "ready" | "refreshing" | "error">(
+    "initial",
+  );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [collectionTitle, setCollectionTitle] = useState("");
+  const requestSeq = useRef(0);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const hasFilters = FILTER_KEYS.some((k) => urlFilters[k]);
 
-  /* ── Fetch albums ── */
+  // New criteria: back to the first page.
+  if (loadedKey !== criteriaKey) {
+    setLoadedKey(criteriaKey);
+    setPage(0);
+  }
 
   useEffect(() => {
-    let cancelled = false;
+    onBusyChange(phase === "refreshing");
+  }, [phase, onBusyChange]);
+
+  /* ── Fetch albums ── */
+
+  // Each request aborts the previous one, and only the answer to the latest
+  // request is applied (a slow earlier answer may still arrive).
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+    const seq = ++requestSeq.current;
+    const isLatest = () => seq === requestSeq.current && !signal.aborted;
+    const firstPage = page === 0;
 
     const loadCollections = async (): Promise<AlbumResponse[]> => {
       if (featuredSlug) {
         const details = await httpClient.getJson<FeaturedCollectionWithAlbumsApi>(
           `featured/${featuredSlug}`,
+          { signal },
         );
-        if (!cancelled) setCollectionTitle(details.title ?? "");
+        if (isLatest()) setCollectionTitle(details.title ?? "");
         return (details.albums ?? []) as AlbumResponse[];
       }
 
       // «Colecciones» with nothing chosen: every collection, without repeats.
-      const list = await httpClient.getJson<{ slug: string }[]>("featured");
+      const list = await httpClient.getJson<{ slug: string }[]>("featured", {
+        signal,
+      });
       const details = await Promise.all(
         list.map((item) =>
           httpClient.getJson<FeaturedCollectionWithAlbumsApi>(
             `featured/${item.slug}`,
+            { signal },
           ),
         ),
       );
@@ -228,22 +252,17 @@ function CatalogResults({
     };
 
     const load = async () => {
-      if (isCollections && page !== initialPage) {
-        setHasMore(false);
-        return;
-      }
-
-      if (page === initialPage) setIsLoading(true);
+      if (firstPage) setPhase((prev) => (prev === "initial" ? "initial" : "refreshing"));
       else setIsLoadingMore(true);
-      setError(null);
+
       try {
         if (isCollections) {
           const collectionAlbums = await loadCollections();
-          if (cancelled) return;
+          if (!isLatest()) return;
           setAlbums(collectionAlbums);
           setTotalElements(collectionAlbums.length);
-          setTotalPages(1);
           setHasMore(false);
+          setPhase("ready");
           return;
         }
 
@@ -251,35 +270,33 @@ function CatalogResults({
         apiParams.set("sort", sortBy);
         const data = await httpClient.getJson<PageResponse<AlbumResponse>>(
           buildAlbumsApiPath(apiParams, page),
+          { signal },
         );
-        if (cancelled) return;
-        const nextTotalElements = data.totalElements ?? 0;
-        const nextTotalPages = data.totalPages ?? 0;
-        setAlbums((prev) =>
-          page === initialPage ? data.content : [...prev, ...data.content],
-        );
-        setTotalElements(nextTotalElements);
-        setTotalPages(nextTotalPages);
-        setHasMore(page < nextTotalPages - 1);
+        if (!isLatest()) return;
+        const totalPages = data.totalPages ?? 0;
+        setAlbums((prev) => (firstPage ? data.content : [...prev, ...data.content]));
+        setTotalElements(data.totalElements ?? 0);
+        setHasMore(page < totalPages - 1);
+        setPhase("ready");
       } catch {
-        if (!cancelled)
-          setError("No pudimos cargar los resultados. Intenta nuevamente.");
+        if (!isLatest()) return;
+        if (firstPage) setPhase("error");
+        else setHasMore(false);
       } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-          setIsLoadingMore(false);
-        }
+        if (isLatest()) setIsLoadingMore(false);
       }
     };
 
     void load();
-    return () => {
-      cancelled = true;
-    };
-  }, [featuredSlug, initialPage, isCollections, page, params, sortBy]);
+    return () => controller.abort();
+    // criteriaKey stands for params, sortBy and the collection fields.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criteriaKey, page]);
 
   useEffect(() => {
-    if (!loadMoreRef.current || isLoading || isLoadingMore || !hasMore) return;
+    if (!loadMoreRef.current || phase !== "ready" || isLoadingMore || !hasMore) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -292,7 +309,7 @@ function CatalogResults({
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [hasMore, isLoading, isLoadingMore]);
+  }, [hasMore, phase, isLoadingMore]);
 
   /* ── Handlers ── */
 
@@ -308,6 +325,10 @@ function CatalogResults({
         url.searchParams.delete("q");
         url.searchParams.delete("page");
       });
+      return;
+    }
+    if (live) {
+      live.change("");
       return;
     }
     updateUrlSearchParams((p) => {
@@ -338,7 +359,9 @@ function CatalogResults({
 
   const count = (
     <span className={styles.count}>
-      {isLoading ? "Buscando…" : countLabel(totalElements)}
+      {phase === "initial" || phase === "refreshing"
+        ? "Buscando…"
+        : countLabel(totalElements)}
     </span>
   );
 
@@ -435,25 +458,35 @@ function CatalogResults({
         {chips.length > 0 && <div className={styles.chips}>{chips}</div>}
       </div>
 
-      {error && <p className={styles.error}>{error}</p>}
-
-      {isLoading ? (
-        <p className={styles.message}>Cargando resultados…</p>
-      ) : albums.length === 0 && !error ? (
-        <p className={styles.message}>No se encontraron resultados.</p>
-      ) : (
-        <div className={styles.grid}>
-          {albums.map((album) => (
-            <AlbumTile key={album.id} album={album} linkQuery={detailQuery} />
-          ))}
-        </div>
+      {live?.showHint && (
+        <p className={styles.hint}>
+          Seguí escribiendo: la búsqueda empieza con 2 letras.
+        </p>
       )}
 
-      {!isLoading && totalPages > 1 && hasMore && (
-        <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
-          {isLoadingMore ? "Cargando más resultados…" : ""}
-        </div>
-      )}
+      <div className={`${styles.results} ${phase === "refreshing" ? styles.busy : ""}`}>
+        {phase === "initial" ? (
+          <p className={styles.message}>Cargando resultados…</p>
+        ) : phase === "error" ? (
+          <p className={styles.error}>
+            No pudimos cargar los resultados. Intenta nuevamente.
+          </p>
+        ) : albums.length === 0 ? (
+          <p className={styles.message}>No se encontraron resultados.</p>
+        ) : (
+          <div className={styles.grid}>
+            {albums.map((album) => (
+              <AlbumTile key={album.id} album={album} linkQuery={detailQuery} />
+            ))}
+          </div>
+        )}
+
+        {phase === "ready" && hasMore && (
+          <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
+            {isLoadingMore ? "Cargando más resultados…" : ""}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

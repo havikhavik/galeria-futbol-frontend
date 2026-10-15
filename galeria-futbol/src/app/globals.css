@@ -33,6 +33,10 @@
   /* Height of the fixed site header. */
   --hh: 61px;
 
+  /* Scroll progress over the first 80% of the screen (0 to 1): darkens the
+     stadium and fades the hero. */
+  --p: 0;
+
   /* Width of the content column (hero, bar, gallery, footer). */
   --gf-content-max: 1440px;
 }

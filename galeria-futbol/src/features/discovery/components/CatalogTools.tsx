@@ -5,6 +5,7 @@ import { updateUrlSearchParams } from "../../../shared/hooks/useUrlSearchParams"
 import type { AlbumTagKey } from "../../../shared/types/albums";
 import { readTagFilters } from "../../../shared/utils/queryHelpers";
 import { type GalleryMode, defaultSortFor, sortOptions } from "../catalogSort";
+import { scrollToGallery } from "../galleryScroll";
 
 import { AnchoredPopover } from "./AnchoredPopover";
 import styles from "./CatalogTools.module.css";
@@ -35,7 +36,7 @@ export function CatalogTools({ mode, params }: CatalogToolsProps) {
   const [pending, setPending] = useState(urlFilters);
   const activeCount = FILTER_KEYS.filter((k) => urlFilters[k]).length;
 
-  const defaultSort = defaultSortFor(mode);
+  const defaultSort = defaultSortFor(mode, params.get("q") || "");
   const options = sortOptions(mode);
   const sortBy = params.get("sort") || defaultSort;
   const sortLabel =
@@ -57,6 +58,10 @@ export function CatalogTools({ mode, params }: CatalogToolsProps) {
       return;
     }
     if (menu === "filters") setPending(urlFilters);
+    // Opened from the hero, the dropdown would hang off the bottom of the
+    // screen: bring the gallery up first so the bar pins at the top. The
+    // dropdown follows its button while the page scrolls.
+    scrollToGallery();
     setOpen(menu);
   };
 
@@ -70,6 +75,7 @@ export function CatalogTools({ mode, params }: CatalogToolsProps) {
       p.delete("page");
     });
     close(true);
+    scrollToGallery();
   };
 
   const changeSort = (value: string) => {
@@ -80,6 +86,7 @@ export function CatalogTools({ mode, params }: CatalogToolsProps) {
       else p.set("sort", value);
       p.delete("page");
     });
+    scrollToGallery();
   };
 
   return (

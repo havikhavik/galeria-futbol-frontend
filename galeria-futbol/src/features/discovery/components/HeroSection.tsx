@@ -1,4 +1,5 @@
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar";
+import { useLiveSearchContext } from "../liveSearch";
 
 import styles from "./HeroSection.module.css";
 
@@ -8,6 +9,8 @@ type HeroSectionProps = {
 };
 
 export function HeroSection({ onSearchSubmit }: HeroSectionProps) {
+  const live = useLiveSearchContext();
+
   return (
     <section className={styles.hero} aria-labelledby="home-title">
       <div className={styles.lead}>
@@ -24,10 +27,21 @@ export function HeroSection({ onSearchSubmit }: HeroSectionProps) {
         <p className={styles.prompt}>
           Buscá por club, selección, jugador o temporada.
         </p>
-        <SearchBar
-          placeholder="Buscar por club, selección o temporada…"
-          onSubmit={onSearchSubmit}
-        />
+        <div className={styles.search} data-hero-search="">
+          {live ? (
+            <SearchBar
+              placeholder="Buscar por club, selección o temporada…"
+              value={live.value}
+              onChange={live.change}
+              onSubmit={live.commit}
+            />
+          ) : (
+            <SearchBar
+              placeholder="Buscar por club, selección o temporada…"
+              onSubmit={onSearchSubmit}
+            />
+          )}
+        </div>
       </div>
     </section>
   );

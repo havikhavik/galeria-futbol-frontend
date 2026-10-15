@@ -2,6 +2,7 @@ import { routes, toAppPath } from "../../../app/router/routes";
 import { BrandLogo } from "../../../shared/components/BrandLogo/BrandLogo";
 import { SearchBar } from "../../../shared/components/SearchBar/SearchBar";
 import { submitSearch } from "../../../shared/utils/navigation";
+import { useLiveSearchContext } from "../liveSearch";
 
 import styles from "./SiteHeader.module.css";
 
@@ -10,7 +11,8 @@ type SiteHeaderProps = {
   solid: boolean;
   /** The category bar is pinned below: it draws the shared surface. */
   docked: boolean;
-  searchValue?: string;
+  /** Hidden while another search field is the one in view. */
+  hideSearch?: boolean;
   /** Mobile search button: takes the user to the gallery search field. */
   onMobileSearch: () => void;
 };
@@ -18,13 +20,15 @@ type SiteHeaderProps = {
 export function SiteHeader({
   solid,
   docked,
-  searchValue,
+  hideSearch = false,
   onMobileSearch,
 }: SiteHeaderProps) {
+  const live = useLiveSearchContext();
   const classes = [
     styles.header,
     solid ? styles.solid : "",
     docked ? styles.docked : "",
+    hideSearch ? styles.searchHidden : "",
   ].join(" ");
 
   return (
@@ -37,12 +41,17 @@ export function SiteHeader({
         <BrandLogo />
       </a>
 
-      <div className={styles.search}>
-        <SearchBar
-          placeholder="Buscar camisetas…"
-          initialValue={searchValue}
-          onSubmit={submitSearch}
-        />
+      <div className={styles.search} data-header-search="">
+        {live ? (
+          <SearchBar
+            placeholder="Buscar camisetas…"
+            value={live.value}
+            onChange={live.change}
+            onSubmit={live.commit}
+          />
+        ) : (
+          <SearchBar placeholder="Buscar camisetas…" onSubmit={submitSearch} />
+        )}
       </div>
 
       <div className={styles.actions}>
