@@ -41,15 +41,18 @@ export function AlbumTile({ album, linkQuery }: AlbumTileProps) {
           />
         ) : (
           <div className={styles.fallback} aria-hidden="true">
-            <svg viewBox="0 0 24 24" className={styles.fallbackIcon}>
-              <path
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg
+              viewBox="0 0 24 24"
+              className={styles.fallbackIcon}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="9" cy="10" r="1.6" />
+              <path d="M21 16l-5-5-8 9" />
             </svg>
           </div>
         )}

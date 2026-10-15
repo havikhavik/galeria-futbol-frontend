@@ -236,6 +236,10 @@
   background: #fff;
 }
 
+.primary:active {
+  transform: scale(0.98);
+}
+
 .primary:focus-visible {
   outline: 2px solid var(--gf-color-ink);
   outline-offset: 3px;

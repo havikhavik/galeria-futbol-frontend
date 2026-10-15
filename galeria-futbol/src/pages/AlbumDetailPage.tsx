@@ -8,7 +8,7 @@ import { PublicLayout } from "../features/discovery/components/PublicLayout";
 import { useCatalogTaxonomy } from "../features/discovery/useCatalogTaxonomy";
 import { httpClient } from "../shared/api/httpClient";
 import type { AlbumResponse, ImageResponse } from "../shared/types/albums";
-import type { PageResponse } from "../shared/types/common";
+import type { HttpClientError, PageResponse } from "../shared/types/common";
 import { albumTags } from "../shared/utils/albumHelpers";
 import { normalizeSeasonLabel } from "../shared/utils/formatters";
 import { readSearchParams } from "../shared/utils/parsers";
@@ -16,6 +16,28 @@ import { readSearchParams } from "../shared/utils/parsers";
 import styles from "./AlbumDetailPage.module.css";
 
 type Photo = { id: number; url: string };
+
+type LoadError = "not-found" | "failed";
+
+/** Navy frame with an image icon, for photos that fail to load. */
+function PhotoFallback() {
+  return (
+    <span className={styles.photoFallback} aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <circle cx="9" cy="10" r="1.6" />
+        <path d="M21 16l-5-5-8 9" />
+      </svg>
+    </span>
+  );
+}
 
 const RELATED_COUNT = 4;
 
@@ -34,7 +56,9 @@ export function AlbumDetailPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [activeIdx, setActiveIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<LoadError | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [failedPhotos, setFailedPhotos] = useState<Set<number>>(() => new Set());
   const [lightbox, setLightbox] = useState(false);
   const [related, setRelated] = useState<AlbumResponse[]>([]);
   const fullButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -63,9 +87,9 @@ export function AlbumDetailPage() {
               : [],
         );
         setActiveIdx(primaryIdx >= 0 ? primaryIdx : 0);
-      } catch {
-        if (!cancelled)
-          setError("No pudimos cargar el álbum. Intenta nuevamente.");
+      } catch (err) {
+        if (cancelled) return;
+        setError((err as HttpClientError).status === 404 ? "not-found" : "failed");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -75,7 +99,7 @@ export function AlbumDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [albumId]);
+  }, [albumId, attempt]);
 
   // «Más de {categoría}»: latest uploads of the same league or confederation.
   useEffect(() => {
@@ -173,6 +197,9 @@ export function AlbumDetailPage() {
   const season = album ? normalizeSeasonLabel(album.seasonLabel, album.seasonStart || null) : "";
   const tags = album ? albumTags(album) : [];
   const photo = photos[activeIdx];
+  const photoFailed = photo ? failedPhotos.has(photo.id) : false;
+  const markFailed = (id: number) =>
+    setFailedPhotos((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
   const photoAlt = album
     ? `${album.title}, foto ${activeIdx + 1} de ${photos.length}`
     : "";
@@ -192,37 +219,75 @@ export function AlbumDetailPage() {
   return (
     <PublicLayout dimmed>
       <div className={styles.wrap}>
-        <div className={styles.top}>
-          <a
-            className={styles.back}
-            href={backHref}
-            onClick={handleBack}
-            aria-label={backLabel}
-          >
-            <span aria-hidden="true">←</span>
-            <span className={styles.backLabel}>{backLabel}</span>
-          </a>
-          {album && (
-            <nav className={styles.crumbs} aria-label="Ruta">
-              <a href={toAppPath(routes.home)}>Inicio</a>
-              <span aria-hidden="true">›</span>
-              <a href={teamTypeHref}>
-                {isNational ? "Selecciones nacionales" : "Clubes"}
-              </a>
-              {categoryName && (
-                <>
-                  <span aria-hidden="true">›</span>
-                  <a href={categoryHref}>{categoryName}</a>
-                </>
-              )}
-              <span aria-hidden="true">›</span>
-              <b>{album.title}</b>
-            </nav>
-          )}
-        </div>
+        {!error && (
+          <div className={styles.top}>
+            <a
+              className={styles.back}
+              href={backHref}
+              onClick={handleBack}
+              aria-label={backLabel}
+            >
+              <span aria-hidden="true">←</span>
+              <span className={styles.backLabel}>{backLabel}</span>
+            </a>
+            {album && (
+              <nav className={styles.crumbs} aria-label="Ruta">
+                <a href={toAppPath(routes.home)}>Inicio</a>
+                <span aria-hidden="true">›</span>
+                <a href={teamTypeHref}>
+                  {isNational ? "Selecciones nacionales" : "Clubes"}
+                </a>
+                {categoryName && (
+                  <>
+                    <span aria-hidden="true">›</span>
+                    <a href={categoryHref}>{categoryName}</a>
+                  </>
+                )}
+                <span aria-hidden="true">›</span>
+                <b>{album.title}</b>
+              </nav>
+            )}
+          </div>
+        )}
 
-        {isLoading && <p className={styles.message}>Cargando álbum…</p>}
-        {error && <p className={styles.error}>{error}</p>}
+        {isLoading && (
+          <div className={styles.detail} aria-busy="true">
+            <section className={styles.viewer} aria-label="Cargando camiseta">
+              <div className={`${styles.stage} ${styles.skeletonBlock}`} />
+            </section>
+            <div className={styles.info} aria-hidden="true">
+              <i className={`${styles.skeletonLine} ${styles.skeletonShort}`} />
+              <i className={`${styles.skeletonLine} ${styles.skeletonTitle}`} />
+              <i className={styles.skeletonLine} />
+            </div>
+          </div>
+        )}
+
+        {error && !isLoading && (
+          <div className={styles.state}>
+            {error === "not-found" ? (
+              <>
+                <h1>No encontramos esta camiseta</h1>
+                <p>Puede que la hayan quitado del catálogo o que el enlace esté mal.</p>
+                <a className={styles.primaryButton} href={toAppPath(routes.home)}>
+                  Volver a la galería
+                </a>
+              </>
+            ) : (
+              <>
+                <h1>No pudimos cargar la camiseta</h1>
+                <p>Revisá tu conexión y probá de nuevo.</p>
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={() => setAttempt((n) => n + 1)}
+                >
+                  Reintentar
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {album && !isLoading && (
           <>
@@ -238,7 +303,16 @@ export function AlbumDetailPage() {
                       aria-label={`Foto ${i + 1} de ${photos.length}`}
                       onClick={() => setActiveIdx(i)}
                     >
-                      <img src={p.url} alt="" referrerPolicy="no-referrer" />
+                      {failedPhotos.has(p.id) ? (
+                        <PhotoFallback />
+                      ) : (
+                        <img
+                          src={p.url}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          onError={() => markFailed(p.id)}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -252,12 +326,14 @@ export function AlbumDetailPage() {
                   onClick={openLightbox}
                   disabled={!photo}
                 >
-                  {photo && (
+                  {photo && photoFailed && <PhotoFallback />}
+                  {photo && !photoFailed && (
                     <img
                       key={photo.id}
                       src={photo.url}
                       alt={photoAlt}
                       referrerPolicy="no-referrer"
+                      onError={() => markFailed(photo.id)}
                     />
                   )}
                 </button>
@@ -434,12 +510,17 @@ export function AlbumDetailPage() {
                 if (event.target === event.currentTarget) closeLightbox();
               }}
             >
-              <img
-                key={photo.id}
-                src={photo.url}
-                alt={photoAlt}
-                referrerPolicy="no-referrer"
-              />
+              {photoFailed ? (
+                <PhotoFallback />
+              ) : (
+                <img
+                  key={photo.id}
+                  src={photo.url}
+                  alt={photoAlt}
+                  referrerPolicy="no-referrer"
+                  onError={() => markFailed(photo.id)}
+                />
+              )}
             </div>
             <button
               type="button"
@@ -483,7 +564,16 @@ export function AlbumDetailPage() {
                     aria-label={`Foto ${i + 1} de ${photos.length}`}
                     onClick={() => setActiveIdx(i)}
                   >
-                    <img src={p.url} alt="" referrerPolicy="no-referrer" />
+                    {failedPhotos.has(p.id) ? (
+                      <PhotoFallback />
+                    ) : (
+                      <img
+                        src={p.url}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        onError={() => markFailed(p.id)}
+                      />
+                    )}
                   </button>
                 ))}
               </div>
