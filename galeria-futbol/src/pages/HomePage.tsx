@@ -5,7 +5,7 @@ import { submitSearch } from "../shared/utils/navigation";
 
 export function HomePage() {
   return (
-    <PublicLayout>
+    <PublicLayout liveSearch>
       <HeroSection onSearchSubmit={submitSearch} />
       <CatalogGallery mode="home" />
     </PublicLayout>

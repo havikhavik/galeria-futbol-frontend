@@ -5,8 +5,9 @@ export type GalleryMode = "home" | "search";
 /** Latest uploads first: what "Recién llegadas" shows on the home page. */
 export const NEWEST_UPLOADS_SORT = "createdAt,desc";
 
-export function defaultSortFor(mode: GalleryMode): string {
-  return mode === "home" ? NEWEST_UPLOADS_SORT : RELEVANCE_SORT;
+/** Searches rank by relevance; the home catalog shows the latest uploads. */
+export function defaultSortFor(mode: GalleryMode, query = ""): string {
+  return mode === "home" && !query ? NEWEST_UPLOADS_SORT : RELEVANCE_SORT;
 }
 
 // On the home page "Más recientes" means the latest uploads; in searches it

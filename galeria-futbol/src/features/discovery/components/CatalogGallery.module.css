@@ -145,6 +145,23 @@
   border: 0;
 }
 
+.hint {
+  margin: -8px 0 20px;
+  font-size: 0.88rem;
+  color: var(--gf-color-ink-muted);
+}
+
+/* While a new search loads, the previous results stay dimmed. The delay
+   keeps fast answers from flickering. */
+.results {
+  transition: opacity var(--gf-dur-fast) var(--gf-ease-out);
+}
+
+.busy {
+  opacity: 0.45;
+  transition-delay: 120ms;
+}
+
 /* ── Grid ── */
 
 .grid {

@@ -261,6 +261,8 @@ export function CategoryBar({
           </div>
         </div>
 
+        <div className={styles.progress} aria-hidden="true" />
+
         {tab === "club" && (
           <div
             id="all-leagues"

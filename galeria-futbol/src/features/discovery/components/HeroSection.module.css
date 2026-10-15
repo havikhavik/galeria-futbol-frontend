@@ -10,6 +10,14 @@
   gap: 28px 56px;
 }
 
+/* The hero content fades out while scrolling to the gallery, so the big title
+   doesn't show blurred through the translucent header once the bar pins:
+   fully visible until 40% of the way, gone just before the bar pins. */
+.lead,
+.side {
+  opacity: clamp(0, calc((0.8 - var(--p)) * 2.5), 1);
+}
+
 .lead {
   position: relative;
   display: grid;
@@ -66,6 +74,12 @@
   display: grid;
   gap: 12px;
   padding-bottom: 6px;
+}
+
+/* One search field at a time: with a search active, the hero field hides
+   while the bar is pinned (the header one takes over). */
+:global(html[data-docked="true"][data-q-on="true"]) .search {
+  visibility: hidden;
 }
 
 .prompt {

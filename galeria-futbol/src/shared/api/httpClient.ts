@@ -39,6 +39,7 @@ async function requestJson<T>(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: object,
+  signal?: AbortSignal,
 ): Promise<T> {
   const normalizedPath = path.replace(/^\/+/, '')
   const headers = buildHeaders(body ? { 'Content-Type': 'application/json' } : undefined)
@@ -54,6 +55,7 @@ async function requestJson<T>(
     credentials: 'omit',
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    signal,
   })
 
   // Security: on unauthorized protected calls, clear local auth state and force re-login.
@@ -88,7 +90,8 @@ async function requestJson<T>(
 export const httpClient = {
   baseUrl: apiBaseUrl,
   buildUrl: (path: string) => `${apiBaseUrl}/${path.replace(/^\/+/, '')}`,
-  getJson: <T>(path: string): Promise<T> => requestJson<T>('GET', path),
+  getJson: <T>(path: string, options?: { signal?: AbortSignal }): Promise<T> =>
+    requestJson<T>('GET', path, undefined, options?.signal),
   postJson: <TResponse, TBody extends object>(path: string, body: TBody): Promise<TResponse> =>
     requestJson<TResponse>('POST', path, body),
   putJson: <TResponse, TBody extends object>(path: string, body: TBody): Promise<TResponse> =>

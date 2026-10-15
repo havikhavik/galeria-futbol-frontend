@@ -4,6 +4,8 @@ import { routes } from "../../../app/router/routes";
 import { Footer } from "../../../shared/components/Footer/Footer";
 import { navigateTo } from "../../../shared/utils/navigation";
 
+import { LiveSearchContext, useLiveSearch } from "../liveSearch";
+
 import { SiteHeader } from "./SiteHeader";
 import { StadiumBackground } from "./StadiumBackground";
 import styles from "./PublicLayout.module.css";
@@ -11,7 +13,8 @@ import styles from "./PublicLayout.module.css";
 type PublicLayoutProps = {
   /** Page without hero: stadium fully darkened and header solid. */
   dimmed?: boolean;
-  searchValue?: string;
+  /** The page has the gallery: every search field searches as you type. */
+  liveSearch?: boolean;
   children: ReactNode;
 };
 
@@ -63,58 +66,41 @@ function useChrome(dimmed: boolean): Chrome {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       delete root.dataset.docked;
-      delete root.dataset.searchOpen;
     };
   }, [dimmed]);
 
   return chrome;
 }
 
-// Mobile search button: jumps to the gallery so the bar pins, shows the
-// search field inside it and focuses it. The jump is instant so the field is
-// already visible when focused: iOS only opens the keyboard if focus happens
-// within the tap.
-function openMobileSearch() {
-  const root = document.documentElement;
-  const bar = document.querySelector<HTMLElement>(BAR_SELECTOR);
-
-  // Pages without gallery (album detail): go to the search page.
-  if (!bar) {
-    navigateTo(routes.search);
-    return;
-  }
-
-  const gallery = bar.parentElement;
-  if (gallery) {
-    const top =
-      gallery.getBoundingClientRect().top + window.scrollY - headerHeight() + 1;
-    if (window.scrollY < top) window.scrollTo({ top, behavior: "auto" });
-    root.dataset.docked = "true";
-  }
-  root.dataset.searchOpen = "true";
-  bar
-    .querySelector<HTMLInputElement>("[data-mobile-search] input")
-    ?.focus({ preventScroll: true });
+// Pages without gallery (album detail): the mobile search button goes to the
+// search page.
+function goToSearchPage() {
+  navigateTo(routes.search);
 }
 
 export function PublicLayout({
   dimmed = false,
-  searchValue,
+  liveSearch = false,
   children,
 }: PublicLayoutProps) {
   const { solid, docked } = useChrome(dimmed);
+  const live = useLiveSearch(liveSearch);
+
+  // One search field at a time: on the home page, while a search is active
+  // and the bar is not pinned, the hero field is the one in view.
+  const hideHeaderSearch = Boolean(live?.active) && !docked && !dimmed;
 
   return (
-    <>
+    <LiveSearchContext.Provider value={live}>
       <StadiumBackground dimmed={dimmed} />
       <SiteHeader
         solid={solid}
         docked={docked}
-        searchValue={searchValue}
-        onMobileSearch={openMobileSearch}
+        hideSearch={hideHeaderSearch}
+        onMobileSearch={live?.openMobileSearch ?? goToSearchPage}
       />
       <main className={styles.main}>{children}</main>
       <Footer />
-    </>
+    </LiveSearchContext.Provider>
   );
 }

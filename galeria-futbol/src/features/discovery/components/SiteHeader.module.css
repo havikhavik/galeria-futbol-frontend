@@ -81,6 +81,12 @@
   transition-delay: 0s;
 }
 
+.solid.searchHidden .search {
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, var(--gf-dur-base);
+}
+
 .actions {
   margin-left: auto;
   display: flex;
